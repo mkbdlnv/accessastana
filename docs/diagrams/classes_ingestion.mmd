@@ -1,0 +1,36 @@
+%% Диаграмма классов: паттерны Strategy и Template Method в ingestion
+classDiagram
+  class BaseLoader {
+    <<abstract>>
+    +name: str
+    +ctx: LoadContext
+    +run() LoadResult
+    +source_files()* list~Path~
+    +extract()* Any
+    +load(session, data, run_id)* tuple
+    +config_fingerprint() str
+  }
+  class LoadContext {
+    +city: CityConfig
+    +project_root: Path
+    +database_url: str
+    +force: bool
+  }
+  class OsmBoundaryLoader
+  class OsmNetworkLoader
+  class OsmPoiLoader
+  class KonturLoader
+  class OpenMeteoLoader {
+    +fetcher: Fetcher
+  }
+  BaseLoader <|-- OsmBoundaryLoader
+  BaseLoader <|-- OsmNetworkLoader
+  BaseLoader <|-- OsmPoiLoader
+  BaseLoader <|-- KonturLoader
+  BaseLoader <|-- OpenMeteoLoader
+  BaseLoader o-- LoadContext
+  class CLI {
+    +ingest(source, city, force)
+  }
+  CLI ..> BaseLoader : выбирает стратегию по имени\n(available_loaders)
+  note for BaseLoader "run(): checksum → пропуск, если не изменилось →\nextract → удалить старые строки и вставить новые\n(одна транзакция) → запись import_runs"

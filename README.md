@@ -102,11 +102,11 @@ Dependabot keeps uv/npm/actions/docker dependencies updated.
 
 | Parameter | Value | Source |
 |---|---|---|
-| Summer walking speed | 1.33 m/s (4.8 km/h) | within Knoblauch et al. (1996), TRR 1538 |
-| Winter speed factor (compact snow) | × 0.935 | Fossum (NTNU), 2021: 1.43 vs 1.53 m/s on asphalt |
-| Severe-cold speed factor (ice) | × 0.830 | Fossum, 2021: 1.27 vs 1.53 m/s |
+| Summer walking speed | 1.33 m/s (4.8 km/h) | assumption between the design value 1.22 m/s (Knoblauch et al., 1996) and observed adult means ≈ 1.5 m/s (Fossum & Ryeng, 2021) |
+| Winter speed factor (compact snow) | × 0.9285 → 1.235 m/s | Fossum & Ryeng (2021), Table 3: 1.403 vs 1.511 m/s on asphalt |
+| Severe-cold speed factor (ice) | × 0.8319 → 1.106 m/s | Fossum & Ryeng (2021), Table 3: 1.257 vs 1.511 m/s |
 | Severe-cold day | wind chill ≤ −28 | ECCC wind-chill guidance (frostbite risk in 10–30 min) |
-| Acceptable walk | 15 min (10 min on severe-cold days) | 15-minute city; 10 min is a stated team assumption |
+| Acceptable walk | 15 min (10 min on severe-cold days) | 15-minute city (Moreno et al., 2021); 10 min is a team assumption, sensitivity 8/10/12 min in the report |
 | Population | Kontur × 1.876 | calibrated to BNS 2025-01-01 total |
 
 ## Attribution

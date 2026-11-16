@@ -1,0 +1,69 @@
+%% Модель данных (PostGIS), миграции migrations/versions/0001-0002
+erDiagram
+  cities ||--o{ districts : "содержит"
+  cities ||--o{ h3_cells : "покрыт"
+  districts |o--o{ h3_cells : "центроид внутри"
+  cities ||--o{ network_nodes : ""
+  cities ||--o{ network_edges : ""
+  cities ||--o{ pois : ""
+  cities ||--o{ accessibility_results : ""
+  cities ||--o{ climate_profiles : ""
+  cities ||--o{ scenarios : ""
+  scenarios ||--o{ scenario_facilities : ""
+  import_runs |o--o{ h3_cells : "версия импорта"
+  import_runs |o--o{ pois : "версия импорта"
+
+  cities { string slug PK
+    geometry boundary "MultiPolygon 4326"
+    int h3_resolution
+    string metric_crs
+    float population_total }
+  districts { int id PK
+    string city_slug FK
+    string name
+    geometry geometry }
+  h3_cells { string city_slug PK
+    string h3 PK "H3 r8"
+    int district_id FK
+    float population_raw "Kontur"
+    float population "калиброванное"
+    geometry centroid }
+  network_nodes { string city_slug PK
+    bigint id PK "OSM node"
+    geometry geometry }
+  network_edges { bigint id PK
+    bigint u
+    bigint v
+    float length_m
+    string highway }
+  pois { int id PK
+    string category
+    string external_id "way/123"
+    string name
+    json attrs "access_points"
+    geometry geometry }
+  accessibility_results { string city_slug PK
+    string h3 PK
+    string category PK
+    string season PK
+    float minutes "null = недоступно"
+    bool reachable
+    int nearest_poi_id }
+  climate_profiles { string city_slug PK
+    string season PK
+    float speed_mps
+    float max_minutes
+    float share_of_days }
+  import_runs { int id PK
+    string loader
+    string checksum "SHA-256"
+    string status
+    int rows }
+  scenarios { int id PK
+    string category
+    string season
+    json result }
+  scenario_facilities { int id PK
+    int scenario_id FK
+    string action "add | remove"
+    geometry geometry }

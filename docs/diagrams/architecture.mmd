@@ -1,0 +1,28 @@
+flowchart LR
+  subgraph Offline["Offline pipeline (laptop / CI runner)"]
+    direction TB
+    SRC1[(Geofabrik .osm.pbf)]
+    SRC2[(Kontur H3 GeoPackage)]
+    SRC4[(Open-Meteo archive API)]
+    CLI["accessastana CLI (typer)"]
+    ING["ingestion/\nBaseLoader strategies"]
+    JOBS["jobs.py\naccessibility"]
+    REP["reporting/\nCSV · PNG · PDF"]
+    SRC1 & SRC2 & SRC4 --> ING
+    CLI --> ING --> DB1
+    CLI --> JOBS --> DB1
+    CLI --> REP
+  end
+  DB1[("PostgreSQL + PostGIS\ncities · districts · h3_cells · network_* · pois\naccessibility_results · climate_profiles\nscenarios · import_runs")]
+  DB1 -- "pg_dump → pg_restore" --> DB2
+  subgraph Server["AWS EC2 (docker-compose.prod.yml)"]
+    direction TB
+    NGINX["frontend: nginx\nReact + MapLibre + deck.gl"]
+    API["api: FastAPI\nrouters → services → repositories"]
+    ENG["analysis.CityEngine\n(in-memory graph, cached)"]
+    DB2[("PostGIS")]
+    NGINX -- "/api/*" --> API
+    API --> DB2
+    API --> ENG
+  end
+  USER((Browser)) --> NGINX

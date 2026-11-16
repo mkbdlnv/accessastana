@@ -1,0 +1,29 @@
+%% Диаграмма последовательности: POST /scenarios
+sequenceDiagram
+  autonumber
+  actor U as Пользователь
+  participant FE as Frontend (React)
+  participant NG as nginx
+  participant RT as routers.scenario
+  participant SV as ScenarioService
+  participant EC as EngineCache
+  participant EN as CityEngine
+  participant SC as scenarios.apply_scenario
+  U->>FE: клики по карте + «Рассчитать»
+  FE->>NG: POST /api/scenarios {category, season, add[], remove[]}
+  NG->>RT: POST /scenarios
+  RT->>SV: run(ScenarioIn) (валидация pydantic)
+  SV->>SV: check(city, category, season), лимит ≤ 50 объектов
+  SV->>EC: get(city)
+  alt граф ещё не загружен
+    EC->>EN: load_engine(session, city) (~1 с, один раз)
+  end
+  EC-->>SV: CityEngine
+  SV->>EN: scenario(category, season, add, remove)
+  EN->>EN: baseline(category) из кэша
+  EN->>SC: пересчёт только затронутых ячеек
+  SC-->>EN: расстояния, ближайшие объекты, маска изменений
+  EN-->>SV: before / after / changed_cells
+  SV-->>RT: ScenarioOut
+  RT-->>FE: 200 JSON (p95 6 мс на данных Астаны)
+  FE-->>U: таблица «до / после», подсветка ячеек

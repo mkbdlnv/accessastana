@@ -6,29 +6,36 @@
 # and a facility counts as "reachable" when minutes <= max_minutes.
 #
 # --- Base speed --------------------------------------------------------------
-# 1.33 m/s = 4.8 km/h: a conventional planning value for adult walking. It lies
-# inside the 1.25-1.51 m/s range of mean free-flow walking speeds reported by
-# Knoblauch, Pietrucha & Nitzburg (1996), "Field studies of pedestrian walking
-# speed and start-up time", Transportation Research Record 1538, 27-38.
-# We deliberately do NOT use 1.53 m/s (Fossum's asphalt mean, below): that
-# sample was weekday commuters, faster than the general population that
-# includes children and the elderly.
+# 1.33 m/s = 4.8 km/h is a conventional planning value (ASSUMPTION). Context
+# from verified sources (docs/final/sources_verified.md):
+# - Knoblauch, Pietrucha & Nitzburg (1996), Transportation Research Record 1538,
+#   27-38, doi:10.1177/0361198196153800104: CROSSWALK speeds at 16 signalised
+#   crossings; 15th-percentile 1.25 m/s (ages 14-64) and 0.97 m/s (65+);
+#   recommended design values 1.22 and 0.91 m/s (abstract).
+# - Fossum & Ryeng (2021), Table 3: mean 1.511 m/s on dry asphalt in Trondheim
+#   (adult pedestrians on weekdays).
+# 1.33 m/s lies between the conservative design value (1.22) and observed adult
+# means (~1.5). Children and older people walk slower, so absolute minutes are
+# indicative; comparisons between seasons and districts use the same speed.
 #
 # --- Winter speed reduction ---------------------------------------------------
-# Fossum M. (NTNU), "Pedestrians' walking behavior and single accidents during
-# winter conditions", NTSA 2021 / Transportation Research Part D, 2021
-# (doi:10.1016/j.trd.2021.102934). Naturalistic observation, N = 1,551 in Norway:
-#   asphalt 1.53 m/s | compact snow 1.43 | loose snow 1.40 | gritted ice 1.38 | ice 1.27
-# We apply these as RATIOS to our base speed (transferability assumption):
-#   compact snow 1.43/1.53 = 0.935   ice 1.27/1.53 = 0.830
+# Fossum M., Ryeng E. O. (2021) "The walking speed of pedestrians on various
+# pavement surface conditions during winter", Transportation Research Part D 97,
+# 102934, doi:10.1016/j.trd.2021.102934, Table 3 (p. 11): model-predicted mean
+# speeds on flat ground, N = 1,631, Trondheim, Nov 2019 - Mar 2020, -12...+8 C:
+#   asphalt 1.511 | compact snow 1.403 | loose snow 1.378 | gritted ice 1.361 | ice 1.257 m/s
+# Applied as RATIOS to the base speed (transferability assumption: Norwegian
+# observations applied to Astana):
+#   compact snow 1.403 / 1.511 = 0.9285  -> 1.33 * 0.9285 = 1.235 m/s
+#   clean ice    1.257 / 1.511 = 0.8319  -> 1.33 * 0.8319 = 1.106 m/s
 #
 # --- Acceptable walking time in severe cold ------------------------------------
-# Environment and Climate Change Canada wind-chill guidance: at a wind chill of
-# -28 to -39, exposed skin can freeze in 10-30 minutes ("high risk").
-# https://www.canada.ca/en/environment-climate-change/services/weather-health/wind-chill-cold-weather/wind-chill-index.html
+# Environment and Climate Change Canada, "Wind chill and the Wind Chill Index":
+# wind chill -28 to -39 = "High risk ... Exposed skin can freeze in 10 to 30 minutes".
+# https://www.canada.ca/en/services/environment/weather/severeweather/wind-chill-index.html
 # ASSUMPTION (team, configurable): on such days the acceptable one-way trip
-# drops from 15 to 10 minutes, i.e. below the lower bound of the 10-30 min
-# frostbite window.
+# drops from 15 to 10 minutes, the lower bound of that window. The report shows
+# the sensitivity of the result for 8 / 10 / 12 minutes.
 #
 # --- Assigning days to profiles ----------------------------------------------
 # The climate loader classifies every day of the reference period (Open-Meteo
@@ -48,13 +55,13 @@ profiles:
   winter:
     label: Winter (typical)
     months: [12, 1, 2]
-    speed_mps: 1.244      # 1.33 * 0.935 (compact snow)
+    speed_mps: 1.235      # 1.33 * 1.403/1.511 (compact snow, Fossum & Ryeng 2021)
     max_minutes: 15
     day_rule: {}          # fallback: any winter day not matched below
   winter_severe:
     label: Winter (severe cold)
     months: [12, 1, 2]
-    speed_mps: 1.104      # 1.33 * 0.830 (ice/hard conditions)
+    speed_mps: 1.106      # 1.33 * 1.257/1.511 (clean ice, Fossum & Ryeng 2021)
     max_minutes: 10
     # Wind chill computed with the ECCC/NWS formula from the daily minimum
     # temperature and the daily mean 10 m wind speed (conservative: the cold

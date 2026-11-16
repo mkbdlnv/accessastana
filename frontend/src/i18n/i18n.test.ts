@@ -37,3 +37,11 @@ describe('i18n dictionaries', () => {
     expect(interpolate('{unknown}', { n: 1 })).toBe('{unknown}');
   });
 });
+
+describe('number locale', () => {
+  it('formats Kazakh numbers with Kazakhstan conventions (space + decimal comma)', async () => {
+    const { numberLocale } = await import('./dictionaries');
+    const formatted = new Intl.NumberFormat(numberLocale('kk'), { maximumFractionDigits: 2 }).format(206759.67);
+    expect(formatted.replace(/\s/g, ' ')).toBe('206 759,67');
+  });
+});
