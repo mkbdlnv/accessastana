@@ -31,7 +31,7 @@ Other Kazakhstan cities can be added with one YAML file in `config/cities/`.
 Requirements: Docker, [uv](https://docs.astral.sh/uv/) (Python 3.12 is installed by uv), Node 22.
 
 ```bash
-cp .env.example .env                       # adjust ports/passwords (DB_PORT if 5432 is taken)
+cp .env.example .env                       # set passwords; if port 5432 is taken, change DB_PORT and both URLs
 docker compose up -d db
 uv sync --extra ingest                     # Python deps incl. osmium/osmnx for ingestion
 uv run accessastana db-upgrade             # Alembic migrations

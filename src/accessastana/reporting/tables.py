@@ -8,7 +8,12 @@ import numpy as np
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from accessastana.analysis.accessibility import composite_index, share_within, summarize_groups
+from accessastana.analysis.accessibility import (
+    composite_index,
+    share_within,
+    summarize_groups,
+    threshold_sensitivity,
+)
 from accessastana.config import load_categories, load_seasons
 from accessastana.db.repositories import read_df
 
@@ -27,6 +32,7 @@ def accessibility_wide(session: Session, slug: str) -> pd.DataFrame:
 
 
 def data_summary(session: Session, slug: str) -> pd.DataFrame:
+    """Counts of cells, population, network and POIs (data inventory table)."""
     q = read_df(
         session,
         """
@@ -83,6 +89,25 @@ def climate_comparison(by_season_df: pd.DataFrame, climate: pd.DataFrame) -> pd.
     return out.reset_index()
 
 
+SEVERE_THRESHOLDS = (8.0, 10.0, 12.0)  # ±2 min around the assumed 10 min (config/seasons.yaml)
+
+
+def severe_sensitivity(wide: pd.DataFrame, thresholds: tuple[float, ...] = SEVERE_THRESHOLDS) -> pd.DataFrame:
+    """Severe-cold profile: share of residents reached for alternative acceptable
+    times. The 10-minute value is a team assumption, so the report shows how much
+    the result moves if it is 8 or 12 minutes instead."""
+    sub = wide[wide.season == "winter_severe"]
+    rows = []
+    for cat, g in sub.groupby("category"):
+        shares = threshold_sensitivity(g["minutes"].to_numpy(), g["population"].to_numpy(), thresholds)
+        rows.append({"category": cat, **{f"within_{int(t)}": v for t, v in shares.items()}})
+    out = pd.DataFrame(rows)
+    if not out.empty:
+        lo, hi = f"within_{int(thresholds[0])}", f"within_{int(thresholds[-1])}"
+        out["range_pp"] = 100 * (out[hi] - out[lo])
+    return out
+
+
 def season_cells(wide: pd.DataFrame, season: str) -> pd.DataFrame:
     """One row per cell: population, district, one minutes column per category
     and the composite index for `season`.
@@ -101,6 +126,7 @@ def season_cells(wide: pd.DataFrame, season: str) -> pd.DataFrame:
 
 
 def districts(wide: pd.DataFrame) -> pd.DataFrame:
+    """Per-district index and reachable shares for every API season."""
     seasons = load_seasons()
     cats = list(load_categories())
     frames = []
@@ -116,4 +142,5 @@ def districts(wide: pd.DataFrame) -> pd.DataFrame:
 
 
 def cell_index(wide: pd.DataFrame, season: str) -> pd.DataFrame:
+    """Composite index per cell for one season (for the maps)."""
     return season_cells(wide, season)[["h3", "population", "index"]]

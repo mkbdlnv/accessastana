@@ -36,18 +36,22 @@ Fetcher = Callable[[str, dict[str, Any]], dict[str, Any]]
 
 
 def http_fetch(url: str, params: dict[str, Any]) -> dict[str, Any]:
+    """GET the Open-Meteo archive API and return the JSON payload."""
     r = httpx.get(url, params=params, timeout=120)
     r.raise_for_status()
     return r.json()  # type: ignore[no-any-return]
 
 
 def to_daily_frame(payload: dict[str, Any]) -> pd.DataFrame:
+    """Open-Meteo daily payload → DataFrame indexed by date."""
     d = payload["daily"]
     df = pd.DataFrame({k: d[k] for k in d if k != "time"}, index=pd.to_datetime(d["time"]))
     return df.dropna(subset=["temperature_2m_min", "wind_speed_10m_mean"])
 
 
 class OpenMeteoLoader(BaseLoader):
+    """Open-Meteo history → season profiles with shares of days."""
+
     name = "climate"
     fetcher: Fetcher = staticmethod(http_fetch)  # replaced by a fake in tests
 

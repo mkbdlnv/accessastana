@@ -39,6 +39,8 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class LoadContext:
+    """Everything a loader needs: city config, paths, DB URL and flags."""
+
     city: CityConfig
     project_root: Path
     database_url: str | None = None
@@ -47,17 +49,21 @@ class LoadContext:
 
     @property
     def config_path(self) -> Path:
+        """Directory with the YAML config."""
         from accessastana.settings import get_settings
 
         return self.config_dir or get_settings().config_dir
 
     def path(self, relative: str) -> Path:
+        """Resolve a config path relative to the project root."""
         p = Path(relative)
         return p if p.is_absolute() else self.project_root / p
 
 
 @dataclass
 class LoadResult:
+    """Outcome of one loader run."""
+
     loader: str
     skipped: bool
     rows: int = 0
@@ -65,6 +71,7 @@ class LoadResult:
 
 
 def sha256_files(paths: Iterable[Path], extra: str = "") -> str:
+    """SHA-256 over file names and contents plus an extra string (config)."""
     h = hashlib.sha256()
     for p in sorted(paths):
         h.update(p.name.encode())
@@ -76,6 +83,8 @@ def sha256_files(paths: Iterable[Path], extra: str = "") -> str:
 
 
 class BaseLoader(ABC):
+    """Abstract loader (Strategy) with the import algorithm in `run` (Template Method)."""
+
     name: ClassVar[str]
 
     def __init__(self, ctx: LoadContext) -> None:
@@ -100,10 +109,12 @@ class BaseLoader(ABC):
         return json.dumps(self.ctx.city.model_dump(), sort_keys=True, default=str)
 
     def source_version(self) -> str:
+        """Human-readable version of the inputs (file names)."""
         return ", ".join(p.name for p in self.source_files())
 
     # ---- template method ----------------------------------------------------
     def run(self) -> LoadResult:
+        """Import if inputs changed; see the module docstring for the steps."""
         files = self.source_files()
         missing = [str(p) for p in files if not p.exists()]
         if missing:
@@ -151,4 +162,5 @@ def bulk_insert(session: Session, table: Table, records: Sequence[dict[str, Any]
 
 
 def ewkt(geom: Any) -> str:
+    """Shapely geometry → EWKT string with SRID 4326."""
     return f"SRID=4326;{geom.wkt}"

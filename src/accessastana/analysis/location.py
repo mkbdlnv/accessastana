@@ -36,6 +36,8 @@ from ortools.linear_solver import pywraplp
 
 @dataclass
 class LocationSolution:
+    """Chosen candidate indices, objective value, solver status and solve time."""
+
     chosen: list[int]  # candidate indices (columns of d)
     objective: float
     status: str
@@ -90,6 +92,7 @@ def p_median(
     cap_minutes: float = 60.0,
     time_limit_s: float = 60,
 ) -> LocationSolution:
+    """p-median with existing facilities (see the module docstring for the model)."""
     _, m = d.shape
     k = min(k, m)
     e = np.minimum(np.where(np.isfinite(existing), existing, cap_minutes), cap_minutes)

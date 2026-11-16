@@ -19,11 +19,13 @@ from accessastana.config import load_categories, load_city, load_seasons
 
 
 def read_df(session: Session, sql: str, **params: object) -> pd.DataFrame:
+    """Run SQL with named parameters and return a DataFrame."""
     res = session.execute(text(sql), params)
     return pd.DataFrame(res.fetchall(), columns=list(res.keys()))
 
 
 def load_engine(session: Session, slug: str) -> CityEngine:
+    """Build the CityEngine of a city from the database."""
     city = load_city(slug)
     tf = Transformer.from_crs(4326, city.metric_crs, always_xy=True)
 

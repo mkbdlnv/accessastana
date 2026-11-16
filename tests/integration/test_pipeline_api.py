@@ -2,31 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-from accessastana.db.session import get_engine, get_sessionmaker
+from accessastana.db.session import get_engine
 
 pytestmark = pytest.mark.db
-
-
-@pytest.fixture(scope="module")
-def client(seeded_db: str, tmp_path_factory: pytest.TempPathFactory) -> Iterator[TestClient]:
-    from accessastana.api.main import create_app
-    from accessastana.reporting.build import build_report
-
-    out = tmp_path_factory.mktemp("reports")
-
-    def builder(city: str, refresh: bool) -> Path:
-        return build_report(city, seeded_db, out)
-
-    app = create_app(maker=get_sessionmaker(seeded_db), report_builder=builder)
-    with TestClient(app) as c:
-        yield c
 
 
 def q(db: str, sql: str) -> list[tuple]:  # type: ignore[type-arg]

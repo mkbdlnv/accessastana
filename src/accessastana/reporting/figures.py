@@ -62,6 +62,7 @@ def season_bars(by_season: pd.DataFrame, labels: dict[str, str], out: Path) -> P
 
 
 def district_index_bars(districts: pd.DataFrame, out: Path) -> Path:
+    """Grouped bars: 15-minute index per district and season."""
     seasons = [s for s in SEASON_COLORS if s in set(districts.season)]
     names = sorted(set(districts.district.dropna()) - {"—"})
     fig, ax = plt.subplots(figsize=(9, 4), facecolor=SURFACE)
@@ -103,7 +104,11 @@ def index_maps(cells_by_season: dict[str, pd.DataFrame], boundary: gpd.GeoSeries
     cb = fig.colorbar(sm, ax=axes, shrink=0.6, location="right")
     cb.set_label("15-minute index (share of 7 categories reachable)", fontsize=9, color=INK2)
     fig.text(
-        0.01, 0.01, "© OpenStreetMap contributors · Kontur Population (CC BY 4.0)", fontsize=7, color=INK2
+        0.01,
+        0.01,
+        "© OpenStreetMap contributors (ODbL) · Kontur Population (CC BY 4.0) · Open-Meteo.com (CC BY 4.0)",
+        fontsize=7,
+        color=INK2,
     )
     fig.savefig(out, dpi=200, facecolor=SURFACE, bbox_inches="tight")
     plt.close(fig)

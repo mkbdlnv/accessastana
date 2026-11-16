@@ -10,11 +10,15 @@ from __future__ import annotations
 import os
 from collections.abc import Iterator
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 import pytest
 from dotenv import load_dotenv
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 from accessastana.analysis.graph import WalkGraph
 
@@ -117,3 +121,22 @@ def seeded_db(db_url: str, toy_dir: Path) -> Iterator[str]:
     results["accessibility"] = run_accessibility("astana", db_url)
     os.environ["ACCESSASTANA_TOY_RESULTS"] = repr({k: getattr(v, "details", v) for k, v in results.items()})
     yield db_url
+
+
+@pytest.fixture(scope="session")
+def client(seeded_db: str, tmp_path_factory: pytest.TempPathFactory) -> Iterator[TestClient]:
+    """FastAPI TestClient bound to the seeded toy-city database."""
+    from fastapi.testclient import TestClient
+
+    from accessastana.api.main import create_app
+    from accessastana.db.session import get_sessionmaker
+    from accessastana.reporting.build import build_report
+
+    out = tmp_path_factory.mktemp("reports")
+
+    def builder(city: str, refresh: bool) -> Path:
+        return build_report(city, seeded_db, out, docs_dir=out)
+
+    app = create_app(maker=get_sessionmaker(seeded_db), report_builder=builder)
+    with TestClient(app) as c:
+        yield c

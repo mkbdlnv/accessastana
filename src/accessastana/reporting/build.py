@@ -66,6 +66,7 @@ def collect(session: Session, slug: str, out_dir: Path) -> dict[str, Any]:
     }
     t["climate_comparison"] = tables.climate_comparison(t["accessibility_by_season"], climate)
     t["districts"] = tables.districts(wide)
+    t["severe_sensitivity"] = tables.severe_sensitivity(wide)
     for name, df in t.items():
         df.to_csv(out_dir / f"{name}.csv", index=False)
 
@@ -87,6 +88,7 @@ def collect(session: Session, slug: str, out_dir: Path) -> dict[str, Any]:
 
 
 def write_markdown(slug: str, data: dict[str, Any], out: Path) -> None:
+    """Write reports/<city>/summary.md with all tables."""
     t = data["tables"]
     cc = t["climate_comparison"]
     lines = [
@@ -108,6 +110,9 @@ def write_markdown(slug: str, data: dict[str, Any], out: Path) -> None:
         "",
         f"## Summer vs winter (share of severe-cold winter days: {cc.attrs.get('p_severe', 0):.1%})",
         cc.round(3).to_markdown(index=False),
+        "",
+        "## Sensitivity: acceptable walk on severe-cold days (assumed 10 min)",
+        t["severe_sensitivity"].round(3).to_markdown(index=False),
         "",
         "## Districts",
         t["districts"].round(3).to_markdown(index=False),
@@ -151,6 +156,7 @@ def _table(df: pd.DataFrame, font: str, pct_cols: tuple[str, ...] = ()) -> Table
 
 
 def write_pdf(slug: str, data: dict[str, Any], out: Path) -> Path:
+    """Write reports/<city>/report.pdf (Cyrillic-capable font)."""
     font = _font()
     st = getSampleStyleSheet()
     h1 = ParagraphStyle("h1", parent=st["Heading1"], fontName=f"{font}-Bold", fontSize=16)
@@ -190,6 +196,9 @@ def write_pdf(slug: str, data: dict[str, Any], out: Path) -> Path:
         ),
         _table(cc.replace({"category": data["labels"]}), font),
         Spacer(1, 6),
+        Paragraph("5a. Sensitivity of the severe-cold result to the assumed 10-minute walk", h2),
+        _table(t["severe_sensitivity"].replace({"category": data["labels"]}), font),
+        Spacer(1, 6),
         Paragraph("6. Districts", h2),
         _table(dist_short, font),
         Spacer(1, 6),
@@ -215,9 +224,20 @@ def write_pdf(slug: str, data: dict[str, Any], out: Path) -> Path:
     return out
 
 
-def build_report(slug: str, database_url: str | None = None, out_root: Path | None = None) -> Path:
+def build_report(
+    slug: str, database_url: str | None = None, out_root: Path | None = None, docs_dir: Path | None = None
+) -> Path:
+    """Write reports/<slug>/ (CSV, PNG, summary.md, report.pdf).
+
+    If `docs_dir` is given, also regenerate docs/results-<slug>.md, so the numbers
+    quoted in the documentation always come from the same run (never typed by hand).
+    """
     out_dir = (out_root or get_settings().project_root / "reports") / slug
     with session_scope(database_url) as s:
         data = collect(s, slug, out_dir)
     write_markdown(slug, data, out_dir / "summary.md")
+    if docs_dir is not None:
+        from accessastana.reporting.results_doc import write_results_doc
+
+        write_results_doc(slug, data, docs_dir / f"results-{slug}.md")
     return write_pdf(slug, data, out_dir / "report.pdf")

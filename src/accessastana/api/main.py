@@ -55,6 +55,7 @@ def create_app(
     report_builder: Callable[[str, bool], Path] | None = None,
     database_url: str | None = None,
 ) -> FastAPI:
+    """Build the FastAPI app; arguments override the DB, engine loader and report builder (tests)."""
     settings = get_settings()
     app = FastAPI(
         title="AccessAstana API",

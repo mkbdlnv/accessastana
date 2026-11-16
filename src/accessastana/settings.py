@@ -7,6 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """Settings from ACCESSASTANA_* environment variables and .env."""
+
     model_config = SettingsConfigDict(env_prefix="ACCESSASTANA_", env_file=".env", extra="ignore")
 
     database_url: str = "postgresql+psycopg://accessastana:accessastana@localhost:5432/accessastana"
@@ -20,9 +22,11 @@ class Settings(BaseSettings):
 
     @property
     def config_dir(self) -> Path:
+        """Directory with the YAML config."""
         return self.project_root / "config"
 
 
 @lru_cache
 def get_settings() -> Settings:
+    """Process-wide settings (cached)."""
     return Settings()

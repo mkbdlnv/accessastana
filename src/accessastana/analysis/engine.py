@@ -31,6 +31,8 @@ from accessastana.config import SeasonProfile
 
 @dataclass
 class CityEngine:
+    """In-memory model of one city; see the module docstring."""
+
     slug: str
     metric_crs: str
     graph: WalkGraph
@@ -46,13 +48,16 @@ class CityEngine:
     # ---- helpers ------------------------------------------------------------
     @property
     def cells_xy(self) -> np.ndarray:
+        """Cell centroids in the metric CRS, shape (n_cells, 2)."""
         return self.cells[["x", "y"]].to_numpy(float)
 
     @property
     def population(self) -> np.ndarray:
+        """Calibrated population per cell, shape (n_cells,)."""
         return self.cells["population"].to_numpy(float)
 
     def lonlat_to_xy(self, lonlat: Sequence[Sequence[float]]) -> np.ndarray:
+        """WGS84 lon/lat pairs → metric x/y, shape (n, 2)."""
         if not len(lonlat):
             return np.empty((0, 2))
         arr = np.asarray(lonlat, float)
@@ -60,11 +65,13 @@ class CityEngine:
         return np.column_stack([x, y])
 
     def profile(self, season: str) -> SeasonProfile:
+        """Season profile by key; KeyError for an unknown season."""
         if season not in self.profiles:
             raise KeyError(f"unknown season {season!r}")
         return self.profiles[season]
 
     def dest(self, category: str) -> Destinations:
+        """Destination points of a category; KeyError for an unknown category."""
         if category not in self.destinations:
             raise KeyError(f"unknown category {category!r}")
         return self.destinations[category]
@@ -77,6 +84,7 @@ class CityEngine:
         return self._baseline[category]
 
     def minutes(self, category: str, season: str) -> np.ndarray:
+        """Walking minutes per cell to the nearest facility for a category and season."""
         return to_minutes(self.baseline(category)[0], self.profile(season).speed_mps)
 
     # ---- scenarios ----------------------------------------------------------
@@ -106,6 +114,7 @@ class CityEngine:
         add_lonlat: Sequence[Sequence[float]] = (),
         remove_ids: Sequence[int] = (),
     ) -> dict[str, Any]:
+        """Before/after metrics and changed cells for added/removed facilities."""
         prof = self.profile(season)
         before, after, _fac, changed, recomputed = self._scenario_arrays(
             category, season, add_lonlat, remove_ids
@@ -136,6 +145,7 @@ class CityEngine:
         return demand, cand, to_minutes(d_m, speed_mps)
 
     def optimize(self, category: str, season: str, k: int, method: str = "max_covering") -> dict[str, Any]:
+        """Recommend k new sites (MCLP or p-median) and evaluate them as a scenario."""
         prof = self.profile(season)
         cap_minutes = 60.0
         limit_m = (prof.max_minutes if method == "max_covering" else cap_minutes) * 60 * prof.speed_mps

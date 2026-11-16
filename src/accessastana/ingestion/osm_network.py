@@ -54,6 +54,7 @@ CLIP_BUFFER_M = 1000  # keep paths just outside the border: shortest paths may l
 
 
 def is_walkable(tags: Any) -> bool:
+    """True if an OSM way may be used by pedestrians (see the module docstring)."""
     hw = tags.get("highway")
     if hw is None or hw in EXCLUDED_HIGHWAYS or tags.get("area") == "yes":
         return False
@@ -120,6 +121,8 @@ def graph_tables(xml_path: Path) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
 
 
 class OsmNetworkLoader(BaseLoader):
+    """Walkable OSM ways → simplified pedestrian graph."""
+
     name = "osm-network"
 
     def source_files(self) -> list[Path]:

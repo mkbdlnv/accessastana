@@ -85,8 +85,8 @@ def report(city: str = typer.Option("astana")) -> None:
     _setup_logging()
     from accessastana.reporting.build import build_report
 
-    out = build_report(city)
-    typer.echo(f"report written to {out}")
+    out = build_report(city, docs_dir=get_settings().project_root / "docs")
+    typer.echo(f"report written to {out}; docs/results-{city}.md regenerated")
 
 
 @app.command()

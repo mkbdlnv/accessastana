@@ -129,3 +129,12 @@ def test_bigger_grid_scales() -> None:
     g = grid_graph(30, 50.0)
     d, _ = g.multi_source(np.array([0]), np.array([0.0]))
     assert d[-1] == pytest.approx(2 * 29 * 50)
+
+
+def test_threshold_sensitivity_is_monotonic() -> None:
+    from accessastana.analysis.accessibility import threshold_sensitivity
+
+    mins = np.array([7.0, 9.0, 11.0, 13.0, np.inf])
+    pop = np.ones(5)
+    s = threshold_sensitivity(mins, pop, [8, 10, 12])
+    assert s == {8.0: 0.2, 10.0: 0.4, 12.0: 0.6}

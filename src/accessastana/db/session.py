@@ -12,10 +12,12 @@ from accessastana.settings import get_settings
 
 @lru_cache
 def get_engine(url: str | None = None) -> Engine:
+    """SQLAlchemy engine for a URL (cached per URL)."""
     return create_engine(url or get_settings().database_url, pool_pre_ping=True, future=True)
 
 
 def get_sessionmaker(url: str | None = None) -> sessionmaker[Session]:
+    """Session factory bound to the engine."""
     return sessionmaker(bind=get_engine(url), expire_on_commit=False)
 
 
