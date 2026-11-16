@@ -146,6 +146,11 @@ def fmt(v: float) -> str:
     return f"{v:,.0f}".replace(",", " ")
 
 
+def dec(v: float, nd: int = 2) -> str:
+    """Russian decimal comma."""
+    return f"{v:.{nd}f}".replace(".", ",")
+
+
 def build_workbook(path: Path) -> None:
     wb = Workbook()
     bold = Font(bold=True)
@@ -315,8 +320,9 @@ def markdown_tables() -> str:
     for m in TEAM:
         ys = [m.year_sum(i) for i in range(3)]
         totals = [a + b for a, b in zip(totals, ys, strict=True)]
-        out.append(f"| {m.role} | {m.cls} | {m.stazh} | {m.kdo():.2f} | {fmt(m.ds())} | {K_VID[KIND]} | {K_TIP[TYPE]} "
-                   f"| {K_RUK[m.kruk]} | {K_DOS[m.kdos_level]:.2f} | {fmt(m.do())} | {m.g} | {fmt(m.p())} "
+        out.append(f"| {m.role} | {m.cls} | {m.stazh} | {dec(m.kdo())} | {fmt(m.ds())} | {dec(K_VID[KIND])} "
+                   f"| {dec(K_TIP[TYPE], 1)} | {dec(K_RUK[m.kruk])} | {dec(K_DOS[m.kdos_level])} | {fmt(m.do())} "
+                   f"| {dec(m.g, 1)} | {fmt(m.p())} "
                    f"| {fmt(m.degree_month())} | {fmt(ys[0])} | {fmt(ys[1])} | {fmt(ys[2])} |")  # fmt: skip
     out.append(f"| **Итого ФОТ без налогов** | | | | | | | | | | | | | **{fmt(totals[0])}** | **{fmt(totals[1])}** | **{fmt(totals[2])}** |")
     out += ["| Налоги и обязательные платежи | | | | | | | | | | | | | [ЗАПОЛНИТЬ] | [ЗАПОЛНИТЬ] | [ЗАПОЛНИТЬ] |", ""]
@@ -325,8 +331,8 @@ def markdown_tables() -> str:
                "(возраст руководителя — [ЗАПОЛНИТЬ]); требование C1 — не менее 30%.")
     out.append("")
     share = [100 * totals[i] / LIMITS[y] for i, y in enumerate(YEARS)]
-    out.append("ФОТ без налогов составляет " + ", ".join(f"{s:.1f}% лимита {y} г." for s, y in zip(share, YEARS, strict=True))
-               + f" (ориентир ННС для статьи 1 с налогами — {REFERENCE_SHARES['1. Оплата труда']}% бюджета).")
+    out.append("ФОТ без налогов составляет " + ", ".join(f"{dec(s, 1)}% лимита {y} г." for s, y in zip(share, YEARS, strict=True))
+               + f" (ориентир ННС для статьи 1 с налогами — {dec(REFERENCE_SHARES['1. Оплата труда'])}% бюджета).")
     out += ["", "**Таблица Д.2 — Командировки (нормы C3)**", "",
             "| Год | Цель | Место | Чел. | Дней / ночей | Суточные | Проживание (норма) | Суточные всего | Проживание всего | Билеты |",
             "|---|---|---|---:|---:|---|---|---:|---:|---|"]  # fmt: skip
@@ -348,7 +354,7 @@ def markdown_tables() -> str:
     out += ["", "**Таблица Д.4 — Структура бюджета: ориентир ННС (C1) и проект**", "",
             "| Статья | Ориентир ННС, % | Проект, % |", "|---|---:|---:|"]
     for name, sh in REFERENCE_SHARES.items():
-        out.append(f"| {name} | {sh:.2f} | [ЗАПОЛНИТЬ: после ввода цен — лист «Свод» в budget.xlsx] |")
+        out.append(f"| {name} | {dec(sh)} | [ЗАПОЛНИТЬ: после ввода цен — лист «Свод» в budget.xlsx] |")
     return "\n".join(out) + "\n"
 
 

@@ -84,6 +84,11 @@ def collect(session: Session, slug: str, out_dir: Path) -> dict[str, Any]:
             out_dir / "fig_index_maps.png",
         ),
     }
+    # Russian versions for the explanatory note (docs/final), same data.
+    cells = {s: tables.cell_index(wide, s) for s in load_seasons().api_seasons}
+    figures.season_bars(t["accessibility_by_season"], labels, out_dir / "fig_season_bars_ru.png", lang="ru")
+    figures.district_index_bars(t["districts"], out_dir / "fig_district_index_ru.png", lang="ru")
+    figures.index_maps(cells, boundary, out_dir / "fig_index_maps_ru.png", lang="ru")
     return {"tables": t, "figures": figs, "labels": labels, "climate": climate}
 
 
