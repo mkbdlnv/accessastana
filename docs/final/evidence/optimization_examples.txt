@@ -1,0 +1,14 @@
+# 2026-11-16 14:48 optimisation examples on Astana data (API via nginx)
+category | season | k | method | status | solve_s | share_before | share_after | Δpp | pop_gain | mean_min_before | mean_min_after
+kindergarten | summer | 5 | max_covering | Optimal | 0.007 | 0.5447 | 0.5966 | 5.19 | 79327 | 17.31 | 16.19
+kindergarten | summer | 5 | p_median | Optimal | 0.058 | 0.5447 | 0.5741 | 2.93 | 44852 | 17.31 | 15.42
+kindergarten | winter_severe | 5 | max_covering | Optimal | 0.005 | 0.2474 | 0.2921 | 4.47 | 68300 | 20.82 | 20.23
+kindergarten | winter_severe | 5 | p_median | Optimal | 0.05 | 0.2474 | 0.2725 | 2.51 | 38331 | 20.82 | 18.54
+clinic | summer | 5 | max_covering | Optimal | 0.005 | 0.4515 | 0.5208 | 6.92 | 105860 | 23.06 | 20.08
+clinic | summer | 5 | p_median | Optimal | 0.1 | 0.4515 | 0.4883 | 3.68 | 56196 | 23.06 | 18.83
+clinic | winter_severe | 5 | max_covering | Optimal | 0.006 | 0.2077 | 0.2587 | 5.10 | 77976 | 27.73 | 27.05
+clinic | winter_severe | 5 | p_median | Optimal | 0.071 | 0.2077 | 0.2388 | 3.11 | 47553 | 27.73 | 22.64
+school | summer | 5 | max_covering | Optimal | 0.005 | 0.6074 | 0.6563 | 4.88 | 74670 | 15.29 | 14.49
+school | summer | 5 | p_median | Optimal | 0.044 | 0.6074 | 0.6230 | 1.56 | 23863 | 15.29 | 13.84
+school | winter_severe | 5 | max_covering | Optimal | 0.004 | 0.2940 | 0.3433 | 4.94 | 75479 | 18.38 | 17.49
+school | winter_severe | 5 | p_median | Optimal | 0.039 | 0.2940 | 0.3093 | 1.54 | 23469 | 18.38 | 16.65
