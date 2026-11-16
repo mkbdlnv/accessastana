@@ -24,6 +24,11 @@ Other Kazakhstan cities can be added with one YAML file in `config/cities/`.
 | First results for Astana | [docs/results-astana.md](docs/results-astana.md) |
 | API contract | [docs/api.md](docs/api.md) (OpenAPI: `docs/openapi.json`, live at `/docs`) |
 | AWS deployment | [docs/deployment-aws.md](docs/deployment-aws.md) |
+| Requirements (FR/NFR, user stories, use cases) | [docs/requirements.md](docs/requirements.md) |
+| Risk register | [docs/risks.md](docs/risks.md) |
+| User manual / System manual | [docs/user-manual.md](docs/user-manual.md) · [docs/system-manual.md](docs/system-manual.md) |
+| UML diagrams | [docs/diagrams/](docs/diagrams/) |
+| **Use of generative AI** | [docs/AI_USAGE.md](docs/AI_USAGE.md) |
 | Frontend | [frontend/README.md](frontend/README.md) |
 
 ## Quick start (local)
@@ -108,6 +113,13 @@ Dependabot keeps uv/npm/actions/docker dependencies updated.
 | Severe-cold day | wind chill ≤ −28 | ECCC wind-chill guidance (frostbite risk in 10–30 min) |
 | Acceptable walk | 15 min (10 min on severe-cold days) | 15-minute city (Moreno et al., 2021); 10 min is a team assumption, sensitivity 8/10/12 min in the report |
 | Population | Kontur × 1.876 | calibrated to BNS 2025-01-01 total |
+
+## Use of generative AI
+
+This project was developed with an AI coding assistant (Claude Code, Anthropic):
+most of the code, tests and documentation were produced by the assistant under
+the team's direction. The disclosure required by the course policy, with the
+details, is in [docs/AI_USAGE.md](docs/AI_USAGE.md).
 
 ## Attribution
 
