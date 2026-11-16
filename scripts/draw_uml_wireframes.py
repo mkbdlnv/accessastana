@@ -10,8 +10,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.patches import Ellipse, FancyArrowPatch, FancyBboxPatch, Rectangle  # noqa: E402
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse, FancyArrowPatch, FancyBboxPatch, Rectangle
 
 OUT = Path(__file__).resolve().parents[1] / "docs" / "diagrams" / "png"
 INK, BLUE, FILL, GREY = "#0b0b0b", "#2a78d6", "#eef4fb", "#8a8984"
@@ -55,7 +55,12 @@ def use_case_diagram() -> Path:
 
     actors = {
         "resident": (1.2, 9.6, "Житель /\nисследователь", ["UC-08", "UC-04", "UC-01", "UC-02"]),
-        "planner": (1.2, 5.6, "Урбанист /\nсотрудник акимата", ["UC-01", "UC-02", "UC-03", "UC-05", "UC-06", "UC-07"]),
+        "planner": (
+            1.2,
+            5.6,
+            "Урбанист /\nсотрудник акимата",
+            ["UC-01", "UC-02", "UC-03", "UC-05", "UC-06", "UC-07"],
+        ),
         "analyst": (12.3, 3.4, "Аналитик\nданных", ["UC-07", "UC-10", "UC-09"]),
         "devops": (12.3, 1.0, "DevOps-\nинженер", ["UC-11"]),
     }
@@ -82,7 +87,9 @@ def use_case_diagram() -> Path:
     return path
 
 
-def box(ax: plt.Axes, x: float, y: float, w: float, h: float, text: str = "", fs: float = 9, dash: bool = False) -> None:
+def box(
+    ax: plt.Axes, x: float, y: float, w: float, h: float, text: str = "", fs: float = 9, dash: bool = False
+) -> None:
     ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.08", fill=False,
                                 lw=1.2, ls="--" if dash else "-", color=INK))  # fmt: skip
     if text:

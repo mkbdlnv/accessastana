@@ -171,7 +171,13 @@ def build_workbook(path: Path) -> None:
     for r in rows:
         p.append(r)
     p.append(())
-    p.append(("Налоги и обязательные платежи с ФОТ (доля, напр. 0,095)", None, "[ЗАПОЛНИТЬ: ставки уточнить в бухгалтерии университета]"))
+    p.append(
+        (
+            "Налоги и обязательные платежи с ФОТ (доля, напр. 0,095)",
+            None,
+            "[ЗАПОЛНИТЬ: ставки уточнить в бухгалтерии университета]",
+        )
+    )
     tax_first = p.max_row + 1
     for name, val in TAXES:
         p.append((name, val, "[ЗАПОЛНИТЬ]"))
@@ -183,8 +189,15 @@ def build_workbook(path: Path) -> None:
         p.column_dimensions[c].width = {"A": 58, "B": 14, "C": 60}[c]
     p["A1"].font = p["B1"].font = p["C1"].font = bold
     # named cells (by address) used below
-    SB, KV, KT, MR, USD, EUR = "Параметры!$B$2", "Параметры!$B$3", "Параметры!$B$4", "Параметры!$B$5", "Параметры!$B$6", "Параметры!$B$7"
-    TAX_SUM = f"SUM(Параметры!$B${tax_first}:$B${tax_last})"
+    c_sbase, c_kvid, c_ktip, c_mrp, c_usd, c_eur = (
+        "Параметры!$B$2",
+        "Параметры!$B$3",
+        "Параметры!$B$4",
+        "Параметры!$B$5",
+        "Параметры!$B$6",
+        "Параметры!$B$7",
+    )
+    tax_sum = f"SUM(Параметры!$B${tax_first}:$B${tax_last})"
 
     # ---- Kdo table (annex 2)
     k = wb.create_sheet("Кдо")
@@ -208,9 +221,9 @@ def build_workbook(path: Path) -> None:
         band = STAZH.index(m.stazh) + 2  # column in the Кдо sheet
         s.append([m.role, m.name, m.position, m.cls, m.stazh,
                   f"=INDEX(Кдо!$B$2:$L$8,D{r},MATCH(E{r},Кдо!$B$1:$L$1,0))",
-                  f"={SB}*F{r}", f"={KV}", f"={KT}", K_RUK[m.kruk], m.kdos_level,
+                  f"={c_sbase}*F{r}", f"={c_kvid}", f"={c_ktip}", K_RUK[m.kruk], m.kdos_level,
                   f"=CHOOSE(K{r}+1,1,1.1,1.2,1.3,1.4,1.5)", f"=G{r}*H{r}*I{r}*J{r}*L{r}", m.g, f"=N{r}*M{r}",
-                  f"={DEGREE_MRP[m.degree]}*{MR}", *m.months,
+                  f"={DEGREE_MRP[m.degree]}*{c_mrp}", *m.months,
                   f"=Q{r}*(O{r}+P{r})", f"=R{r}*(O{r}+P{r})", f"=S{r}*(O{r}+P{r})", m.young])  # fmt: skip
         _ = band
         s.cell(r, 2).fill = fill
@@ -218,19 +231,43 @@ def build_workbook(path: Path) -> None:
         if m.young.startswith("["):
             s.cell(r, 23).fill = fill
     last = s.max_row
-    s.append(["Итого ФОТ без налогов", *[""] * 18, f"=SUM(T2:T{last})", f"=SUM(U2:U{last})", f"=SUM(V2:V{last})"])
+    s.append(
+        ["Итого ФОТ без налогов", *[""] * 18, f"=SUM(T2:T{last})", f"=SUM(U2:U{last})", f"=SUM(V2:V{last})"]
+    )
     tot = s.max_row  # row number taken AFTER writing (an empty append may not create a row)
-    s.append(["Налоги и обязательные платежи", *[""] * 18, f"=T{tot}*{TAX_SUM}", f"=U{tot}*{TAX_SUM}", f"=V{tot}*{TAX_SUM}"])
-    s.append(["Статья 1. Оплата труда, всего", *[""] * 18, f"=T{tot}+T{tot + 1}", f"=U{tot}+U{tot + 1}", f"=V{tot}+V{tot + 1}"])
+    s.append(
+        [
+            "Налоги и обязательные платежи",
+            *[""] * 18,
+            f"=T{tot}*{tax_sum}",
+            f"=U{tot}*{tax_sum}",
+            f"=V{tot}*{tax_sum}",
+        ]
+    )
+    s.append(
+        [
+            "Статья 1. Оплата труда, всего",
+            *[""] * 18,
+            f"=T{tot}+T{tot + 1}",
+            f"=U{tot}+U{tot + 1}",
+            f"=V{tot}+V{tot + 1}",
+        ]
+    )
     for row in range(tot, tot + 3):
         s.cell(row, 1).font = bold
     s.append([])
-    s.append(["Доля молодых учёных (≤ 40 лет) в группе", f'=COUNTIF(W2:W{last},"да")/COUNTA(A2:A{last})', "требование C1: ≥ 30%"])
+    s.append(
+        [
+            "Доля молодых учёных (≤ 40 лет) в группе",
+            f'=COUNTIF(W2:W{last},"да")/COUNTA(A2:A{last})',
+            "требование C1: ≥ 30%",
+        ]
+    )
     for i in range(1, len(head) + 1):
         s.column_dimensions[get_column_letter(i)].width = 14
     s.column_dimensions["A"].width = 32
     s.column_dimensions["C"].width = 26
-    PAY_TOTAL = {y: f"'Оплата труда'!{c}{tot + 2}" for y, c in zip(YEARS, "TUV", strict=True)}
+    pay_total = {y: f"'Оплата труда'!{c}{tot + 2}" for y, c in zip(YEARS, "TUV", strict=True)}
 
     # ---- Travel
     t = wb.create_sheet("Командировки")
@@ -242,17 +279,19 @@ def build_workbook(path: Path) -> None:
         c.alignment = Alignment(wrap_text=True, vertical="top")
     for tr in TRIPS:
         r = t.max_row + 1
-        rate = {"MRP": MR, "USD": USD, "EUR": EUR}[tr.currency]
+        rate = {"MRP": c_mrp, "USD": c_usd, "EUR": c_eur}[tr.currency]
         t.append([tr.year, tr.purpose, tr.place, tr.people, tr.days, tr.nights, tr.per_diem, tr.lodging, tr.currency,
                   f"=D{r}*E{r}*G{r}", f"=D{r}*F{r}*H{r}", f"={rate}", f"=J{r}*L{r}", f"=K{r}*L{r}", None,
                   f"=M{r}+N{r}+O{r}", tr.norm])  # fmt: skip
         t.cell(r, 15).fill = fill
     tl = t.max_row
     t.append([])
-    t.append(["Билеты: ценовые предложения перевозчиков [ЗАПОЛНИТЬ]; ж/д — купе, авиа — эконом (C3 п.3, п.7)"])
+    t.append(
+        ["Билеты: ценовые предложения перевозчиков [ЗАПОЛНИТЬ]; ж/д — купе, авиа — эконом (C3 п.3, п.7)"]
+    )
     t.column_dimensions["B"].width = 48
     t.column_dimensions["Q"].width = 50
-    TRAVEL = {y: f'SUMIF(Командировки!$A$2:$A${tl},{y},Командировки!$P$2:$P${tl})' for y in YEARS}
+    travel = {y: f"SUMIF(Командировки!$A$2:$A${tl},{y},Командировки!$P$2:$P${tl})" for y in YEARS}
 
     # ---- Other articles
     o = wb.create_sheet("Прочие статьи")
@@ -267,28 +306,41 @@ def build_workbook(path: Path) -> None:
     ol = o.max_row
     o.column_dimensions["B"].width = 60
     o.column_dimensions["D"].width = 36
-    OTH = {(a, y): f"SUMIF('Прочие статьи'!$A$2:$A${ol},{a},'Прочие статьи'!{c}$2:{c}${ol})"
+    oth = {(a, y): f"SUMIF('Прочие статьи'!$A$2:$A${ol},{a},'Прочие статьи'!{c}$2:{c}${ol})"
            for a in (3, 4, 5) for y, c in zip(YEARS, "EFG", strict=True)}  # fmt: skip
 
     # ---- Summary
     v = wb.create_sheet("Свод", 0)
-    v.append(["Статья расходов (C1, табл. 2)", *[str(y) for y in YEARS], "Всего", "Доля, %", "Ориентир ННС, %"])
+    v.append(
+        ["Статья расходов (C1, табл. 2)", *[str(y) for y in YEARS], "Всего", "Доля, %", "Ориентир ННС, %"]
+    )
     for c in v[1]:
         c.font = bold
-    arts = [("1. Оплата труда", [f"={PAY_TOTAL[y]}" for y in YEARS]),
-            ("2. Командировки", [f"={TRAVEL[y]}" for y in YEARS]),
-            ("3. Научно-организационное сопровождение", [f"={OTH[(3, y)]}" for y in YEARS]),
-            ("4. Оборудование и ПО", [f"={OTH[(4, y)]}" for y in YEARS]),
-            ("5. Эксплуатационные расходы", [f"={OTH[(5, y)]}" for y in YEARS])]  # fmt: skip
+    arts = [("1. Оплата труда", [f"={pay_total[y]}" for y in YEARS]),
+            ("2. Командировки", [f"={travel[y]}" for y in YEARS]),
+            ("3. Научно-организационное сопровождение", [f"={oth[(3, y)]}" for y in YEARS]),
+            ("4. Оборудование и ПО", [f"={oth[(4, y)]}" for y in YEARS]),
+            ("5. Эксплуатационные расходы", [f"={oth[(5, y)]}" for y in YEARS])]  # fmt: skip
     for name, cells in arts:
         r = v.max_row + 1
         v.append([name, *cells, f"=SUM(B{r}:D{r})", f"=IF($E$7=0,0,E{r}/$E$7*100)", REFERENCE_SHARES[name]])
     v.append(["ИТОГО", "=SUM(B2:B6)", "=SUM(C2:C6)", "=SUM(D2:D6)", "=SUM(E2:E6)", "=IF(E7=0,0,100)", 100])
     v.append(["Лимит (C1)", *[LIMITS[y] for y in YEARS], sum(LIMITS.values())])
     v.append(["Остаток до лимита", "=B8-B7", "=C8-C7", "=D8-D7", "=E8-E7"])
-    v.append(["Укладывается в лимит?", '=IF(B7<=B8,"да","НЕТ")', '=IF(C7<=C8,"да","НЕТ")', '=IF(D7<=D8,"да","НЕТ")'])
+    v.append(
+        [
+            "Укладывается в лимит?",
+            '=IF(B7<=B8,"да","НЕТ")',
+            '=IF(C7<=C8,"да","НЕТ")',
+            '=IF(D7<=D8,"да","НЕТ")',
+        ]
+    )
     v.append([])
-    v.append(["Модельный бюджет учебного проекта. Ячейки с жёлтой заливкой — [ЗАПОЛНИТЬ] (данные команды, ставки, цены)."])
+    v.append(
+        [
+            "Модельный бюджет учебного проекта. Ячейки с жёлтой заливкой — [ЗАПОЛНИТЬ] (данные команды, ставки, цены)."
+        ]
+    )
     for r in (7, 8):
         v.cell(r, 1).font = bold
     v.column_dimensions["A"].width = 44
@@ -324,15 +376,25 @@ def markdown_tables() -> str:
                    f"| {dec(K_TIP[TYPE], 1)} | {dec(K_RUK[m.kruk])} | {dec(K_DOS[m.kdos_level])} | {fmt(m.do())} "
                    f"| {dec(m.g, 1)} | {fmt(m.p())} "
                    f"| {fmt(m.degree_month())} | {fmt(ys[0])} | {fmt(ys[1])} | {fmt(ys[2])} |")  # fmt: skip
-    out.append(f"| **Итого ФОТ без налогов** | | | | | | | | | | | | | **{fmt(totals[0])}** | **{fmt(totals[1])}** | **{fmt(totals[2])}** |")
-    out += ["| Налоги и обязательные платежи | | | | | | | | | | | | | [ЗАПОЛНИТЬ] | [ЗАПОЛНИТЬ] | [ЗАПОЛНИТЬ] |", ""]
+    out.append(
+        f"| **Итого ФОТ без налогов** | | | | | | | | | | | | | **{fmt(totals[0])}** | **{fmt(totals[1])}** | **{fmt(totals[2])}** |"
+    )
+    out += [
+        "| Налоги и обязательные платежи | | | | | | | | | | | | | [ЗАПОЛНИТЬ] | [ЗАПОЛНИТЬ] | [ЗАПОЛНИТЬ] |",
+        "",
+    ]
     young = sum(1 for m in TEAM if m.young == "да")
-    out.append(f"Доля молодых учёных (≤ 40 лет): не менее {young} из {len(TEAM)} = {100 * young / len(TEAM):.0f}% "
-               "(возраст руководителя — [ЗАПОЛНИТЬ]); требование C1 — не менее 30%.")
+    out.append(
+        f"Доля молодых учёных (≤ 40 лет): не менее {young} из {len(TEAM)} = {100 * young / len(TEAM):.0f}% "
+        "(возраст руководителя — [ЗАПОЛНИТЬ]); требование C1 — не менее 30%."
+    )
     out.append("")
     share = [100 * totals[i] / LIMITS[y] for i, y in enumerate(YEARS)]
-    out.append("ФОТ без налогов составляет " + ", ".join(f"{dec(s, 1)}% лимита {y} г." for s, y in zip(share, YEARS, strict=True))
-               + f" (ориентир ННС для статьи 1 с налогами — {dec(REFERENCE_SHARES['1. Оплата труда'])}% бюджета).")
+    out.append(
+        "ФОТ без налогов составляет "
+        + ", ".join(f"{dec(s, 1)}% лимита {y} г." for s, y in zip(share, YEARS, strict=True))
+        + f" (ориентир ННС для статьи 1 с налогами — {dec(REFERENCE_SHARES['1. Оплата труда'])}% бюджета)."
+    )
     out += ["", "**Таблица Д.2 — Командировки (нормы C3)**", "",
             "| Год | Цель | Место | Чел. | Дней / ночей | Суточные | Проживание (норма) | Суточные всего | Проживание всего | Билеты |",
             "|---|---|---|---:|---:|---|---|---:|---:|---|"]  # fmt: skip
@@ -347,12 +409,22 @@ def markdown_tables() -> str:
             lo_s = f"{lodge_total:g} {unit} × курс [ЗАПОЛНИТЬ]"
         out.append(f"| {tr.year} | {tr.purpose} | {tr.place} | {tr.people} | {tr.days} / {tr.nights} "
                    f"| {tr.per_diem:g} {unit}/день | {tr.lodging:g} {unit}/ночь | {pd_s} | {lo_s} | [ЗАПОЛНИТЬ: ценовые предложения] |")  # fmt: skip
-    out += ["", "**Таблица Д.3 — Статьи 3–5 (суммы по ценовым предложениям)**", "",
-            "| Статья | Позиция | Период | Обоснование | Сумма |", "|---:|---|---|---|---|"]
+    out += [
+        "",
+        "**Таблица Д.3 — Статьи 3–5 (суммы по ценовым предложениям)**",
+        "",
+        "| Статья | Позиция | Период | Обоснование | Сумма |",
+        "|---:|---|---|---|---|",
+    ]
     for art, item, period, just in OTHER:
         out.append(f"| {art} | {item} | {period} | {just} | [ЗАПОЛНИТЬ] |")
-    out += ["", "**Таблица Д.4 — Структура бюджета: ориентир ННС (C1) и проект**", "",
-            "| Статья | Ориентир ННС, % | Проект, % |", "|---|---:|---:|"]
+    out += [
+        "",
+        "**Таблица Д.4 — Структура бюджета: ориентир ННС (C1) и проект**",
+        "",
+        "| Статья | Ориентир ННС, % | Проект, % |",
+        "|---|---:|---:|",
+    ]
     for name, sh in REFERENCE_SHARES.items():
         out.append(f"| {name} | {dec(sh)} | [ЗАПОЛНИТЬ: после ввода цен — лист «Свод» в budget.xlsx] |")
     return "\n".join(out) + "\n"

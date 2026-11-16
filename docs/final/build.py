@@ -124,8 +124,11 @@ def parse(lines: list[str]) -> list[Block]:
             flush()
             level = len(m.group(1))
             blocks.append(Block({1: "h1", 2: "h2"}.get(level, "h3"), m.group(2).strip()))
-        elif (m := re.fullmatch(r"\*\*(Таблица [^—]+ — .+)\*\*", s)) and i + 2 < len(lines) and \
-                lines[i + 2].strip().startswith("|"):
+        elif (
+            (m := re.fullmatch(r"\*\*(Таблица [^—]+ — .+)\*\*", s))
+            and i + 2 < len(lines)
+            and lines[i + 2].strip().startswith("|")
+        ):
             flush()
             pending_caption = "!" + m.group(1)  # '!' = explicit label, not auto-numbered
         elif s.startswith("Таблица:"):
@@ -146,12 +149,27 @@ def parse(lines: list[str]) -> list[Block]:
         elif m := re.match(r"!\[([^\]]*)\]\(([^)]+)\)", s):
             flush()
             blocks.append(Block("image", m.group(2), caption=m.group(1)))
-        elif line.startswith((" ", "\t")) and re.match(r"[-*] ", s) and blocks and blocks[-1].kind in ("bullet", "bullet2", "number"):
+        elif (
+            line.startswith((" ", "\t"))
+            and re.match(r"[-*] ", s)
+            and blocks
+            and blocks[-1].kind in ("bullet", "bullet2", "number")
+        ):
             blocks.append(Block("bullet2", s[2:]))  # nested list item
-        elif line.startswith((" ", "\t")) and not para and blocks and blocks[-1].kind in ("bullet", "bullet2", "number") \
-                and lines[i - 1].strip():
+        elif (
+            line.startswith((" ", "\t"))
+            and not para
+            and blocks
+            and blocks[-1].kind in ("bullet", "bullet2", "number")
+            and lines[i - 1].strip()
+        ):
             blocks[-1].text += " " + s  # continuation line of a list item
-        elif s.startswith(">") and blocks and blocks[-1].kind == "quote" and lines[i - 1].strip().startswith(">"):
+        elif (
+            s.startswith(">")
+            and blocks
+            and blocks[-1].kind == "quote"
+            and lines[i - 1].strip().startswith(">")
+        ):
             blocks[-1].text += " " + s.lstrip("> ").strip()  # multi-line block quote
         elif re.match(r"[-*] ", s):
             flush()
@@ -172,7 +190,9 @@ def parse(lines: list[str]) -> list[Block]:
 
 
 # =============================================================================================== DOCX helpers
-def set_run_font(run, size: float = 14, bold: bool | None = None, italic: bool | None = None, mono: bool = False) -> None:
+def set_run_font(
+    run, size: float = 14, bold: bool | None = None, italic: bool | None = None, mono: bool = False
+) -> None:
     run.font.name = "Courier New" if mono else FONT
     run.font.size = Pt(size)
     rpr = run._element.get_or_add_rPr()
@@ -320,7 +340,7 @@ class NoteBuilder:
                 if rf.get(qn(a)) is not None:
                     del rf.attrib[qn(a)]
             pf = st.paragraph_format
-            pf.space_before, pf.space_after = Pt(12 if name == "Heading 1" else 12), Pt(12)
+            pf.space_before, pf.space_after = Pt(12), Pt(12)
             pf.keep_with_next = True
             pf.line_spacing_rule = WD_LINE_SPACING.ONE_POINT_FIVE
         # Ask Word to refresh fields (TOC, PAGE) when the document is opened.
@@ -332,7 +352,9 @@ class NoteBuilder:
                  "attachedSchema", "themeFontLang", "clrSchemeMapping", "doNotIncludeSubdocsInStats",
                  "doNotAutoCompressPictures", "forceUpgrade", "captions", "readModeInkLockDown", "smartTagType",
                  "schemaLibrary", "shapeDefaults", "doNotEmbedSmartTags", "decimalSymbol", "listSeparator")  # fmt: skip
-        successor = next((settings.find(qn(f"w:{n}")) for n in later if settings.find(qn(f"w:{n}")) is not None), None)
+        successor = next(
+            (settings.find(qn(f"w:{n}")) for n in later if settings.find(qn(f"w:{n}")) is not None), None
+        )
         if successor is not None:
             successor.addprevious(upd)
         else:
@@ -366,8 +388,11 @@ class NoteBuilder:
         text = heading_text(kind, text)
         level = {"h1": 1, "h2": 2, "h3": 3}[kind]
         last = self.doc.paragraphs[-1] if self.doc.paragraphs else None
-        starts_section = last is not None and last._p.find(qn("w:pPr")) is not None and \
-            last._p.pPr.find(qn("w:sectPr")) is not None
+        starts_section = (
+            last is not None
+            and last._p.find(qn("w:pPr")) is not None
+            and last._p.pPr.find(qn("w:sectPr")) is not None
+        )
         if level == 1 and last is not None and last.text != "" and not starts_section:
             last.add_run().add_break(WD_BREAK.PAGE)
         if level == 1 and text.startswith("СОДЕРЖАНИЕ"):
@@ -402,7 +427,9 @@ class NoteBuilder:
             p = self.doc.add_paragraph()
             fmt_par(p, WD_ALIGN_PARAGRAPH.LEFT, indent=False, spacing=1.5)
             p.paragraph_format.left_indent = Cm(0 if level == 1 else 0.75)
-            p.paragraph_format.tab_stops.add_tab_stop(Mm(TEXT_W_MM), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS)
+            p.paragraph_format.tab_stops.add_tab_stop(
+                Mm(TEXT_W_MM), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS
+            )
             if idx == 0:
                 fld_char(p, "begin")
                 r = p.add_run()
@@ -585,7 +612,8 @@ class NoteBuilder:
             heading_of_wide = (b.kind in ("h2", "h3") and nxt is not None and nxt.kind == "image"
                                and is_wide_image(Path(nxt.text)))  # fmt: skip
             wide_item = (b.kind == "image" and is_wide_image(Path(b.text))) or (
-                b.kind == "table" and max((len(r) for r in b.rows), default=0) > 9)
+                b.kind == "table" and max((len(r) for r in b.rows), default=0) > 9
+            )
             if b.kind != "title":
                 if heading_of_wide or wide_item:
                     # an image right after its own heading stays on the heading's page
@@ -642,7 +670,9 @@ def to_pdf(path: Path, outdir: Path) -> Path:
 
 
 def pdf_pages(pdf: Path) -> list[str]:
-    txt = subprocess.run(["pdftotext", "-layout", str(pdf), "-"], check=True, capture_output=True, text=True).stdout
+    txt = subprocess.run(
+        ["pdftotext", "-layout", str(pdf), "-"], check=True, capture_output=True, text=True
+    ).stdout
     return txt.split("\f")
 
 
@@ -696,7 +726,7 @@ def build_docx(make_pdf: bool) -> tuple[Path, Path | None]:
 NAVY, ICE, AMBER, INK, MUTED, WHITE = "14324A", "E8F1F8", "F2A541", "1B1B1B", "5B6670", "FFFFFF"
 
 
-def rgb(h: str):  # noqa: ANN201 - python-pptx has its own RGBColor class
+def rgb(h: str):
     from pptx.dml.color import RGBColor as PptxRGB
 
     return PptxRGB.from_string(h)
