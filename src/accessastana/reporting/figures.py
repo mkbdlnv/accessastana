@@ -21,6 +21,17 @@ from shapely.geometry import Polygon
 SURFACE, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
 SEASON_COLORS = {"summer": "#2a78d6", "winter": "#eb6834", "winter_severe": "#1baf7a"}
 SEASON_LABELS = {"summer": "Summer", "winter": "Winter (typical)", "winter_severe": "Winter (severe cold)"}
+# Russian texts for the explanatory note (same figures, `lang="ru"`).
+TEXT = {
+    "en": {"seasons": SEASON_LABELS, "share": "% of residents within acceptable walk",
+           "index": "15-minute index (population-weighted)",
+           "index_cb": "15-minute index (share of 7 categories reachable)"},
+    "ru": {"seasons": {"summer": "Лето", "winter": "Зима (типичная)", "winter_severe": "Сильный мороз"},
+           "share": "% жителей в пределах допустимого времени", "index": "15-минутный индекс (взвеш. по населению)",
+           "index_cb": "15-минутный индекс (доля 7 категорий в пределах порога)"},
+}  # fmt: skip
+CATEGORY_RU = {"school": "Школы", "kindergarten": "Детские\nсады", "clinic": "Поли-\nклиники", "pharmacy": "Аптеки",
+               "transit_stop": "Остановки", "grocery": "Продуктовые\nмагазины", "park": "Парки"}  # fmt: skip
 
 
 def _style(ax: plt.Axes) -> None:
@@ -34,7 +45,7 @@ def _style(ax: plt.Axes) -> None:
     ax.set_axisbelow(True)
 
 
-def season_bars(by_season: pd.DataFrame, labels: dict[str, str], out: Path) -> Path:
+def season_bars(by_season: pd.DataFrame, labels: dict[str, str], out: Path, lang: str = "en") -> Path:
     """Grouped bars: share of population reaching each category within the
     season's acceptable time."""
     seasons = [s for s in SEASON_COLORS if s in set(by_season.season)]
@@ -45,14 +56,18 @@ def season_bars(by_season: pd.DataFrame, labels: dict[str, str], out: Path) -> P
     for k, s in enumerate(seasons):
         sub = by_season[by_season.season == s].set_index("category").reindex(cats)
         xs = [i + (k - (len(seasons) - 1) / 2) * width for i in range(len(cats))]
-        ax.bar(xs, sub["reachable"] * 100, width * 0.92, color=SEASON_COLORS[s], label=SEASON_LABELS[s])
+        ax.bar(
+            xs, sub["reachable"] * 100, width * 0.92, color=SEASON_COLORS[s], label=TEXT[lang]["seasons"][s]
+        )
     # Short labels: wrap at the first space/bracket so neighbours never collide.
     short = [
-        labels.get(c, c).replace(" (", "\n(").replace("Public transport stops", "Transit\nstops")
+        CATEGORY_RU.get(c, c)
+        if lang == "ru"
+        else labels.get(c, c).replace(" (", "\n(").replace("Public transport stops", "Transit\nstops")
         for c in cats
     ]
     ax.set_xticks(range(len(cats)), short, rotation=0, fontsize=9, color=INK)
-    ax.set_ylabel("% of residents within acceptable walk", color=INK2, fontsize=9)
+    ax.set_ylabel(TEXT[lang]["share"], color=INK2, fontsize=9)
     ax.set_ylim(0, 100)
     ax.legend(frameon=False, fontsize=9, ncols=3, loc="upper left", bbox_to_anchor=(0, 1.12))
     fig.tight_layout()
@@ -61,7 +76,8 @@ def season_bars(by_season: pd.DataFrame, labels: dict[str, str], out: Path) -> P
     return out
 
 
-def district_index_bars(districts: pd.DataFrame, out: Path) -> Path:
+def district_index_bars(districts: pd.DataFrame, out: Path, lang: str = "en") -> Path:
+    """Grouped bars: 15-minute index per district and season."""
     seasons = [s for s in SEASON_COLORS if s in set(districts.season)]
     names = sorted(set(districts.district.dropna()) - {"—"})
     fig, ax = plt.subplots(figsize=(9, 4), facecolor=SURFACE)
@@ -70,9 +86,9 @@ def district_index_bars(districts: pd.DataFrame, out: Path) -> Path:
     for k, s in enumerate(seasons):
         sub = districts[districts.season == s].set_index("district").reindex(names)
         xs = [i + (k - (len(seasons) - 1) / 2) * width for i in range(len(names))]
-        ax.bar(xs, sub["index"], width * 0.92, color=SEASON_COLORS[s], label=SEASON_LABELS[s])
+        ax.bar(xs, sub["index"], width * 0.92, color=SEASON_COLORS[s], label=TEXT[lang]["seasons"][s])
     ax.set_xticks(range(len(names)), names, fontsize=9, color=INK)
-    ax.set_ylabel("15-minute index (population-weighted)", color=INK2, fontsize=9)
+    ax.set_ylabel(TEXT[lang]["index"], color=INK2, fontsize=9)
     ax.set_ylim(0, 1)
     ax.legend(frameon=False, fontsize=9, ncols=3, loc="upper left", bbox_to_anchor=(0, 1.12))
     fig.tight_layout()
@@ -81,7 +97,9 @@ def district_index_bars(districts: pd.DataFrame, out: Path) -> Path:
     return out
 
 
-def index_maps(cells_by_season: dict[str, pd.DataFrame], boundary: gpd.GeoSeries, out: Path) -> Path:
+def index_maps(
+    cells_by_season: dict[str, pd.DataFrame], boundary: gpd.GeoSeries, out: Path, lang: str = "en"
+) -> Path:
     """Small multiples: composite index per H3 cell, one panel per season,
     shared single-hue scale 0..1. Unpopulated cells are drawn light grey."""
     fig, axes = plt.subplots(
@@ -97,13 +115,17 @@ def index_maps(cells_by_season: dict[str, pd.DataFrame], boundary: gpd.GeoSeries
             ax=ax, column="index", cmap="Blues", vmin=0, vmax=1, linewidth=0.2, edgecolor=SURFACE
         )
         boundary.boundary.plot(ax=ax, color=INK2, linewidth=0.6)
-        ax.set_title(SEASON_LABELS.get(season, season), fontsize=10, color=INK)
+        ax.set_title(TEXT[lang]["seasons"].get(season, season), fontsize=10, color=INK)
         ax.set_axis_off()
     sm = plt.cm.ScalarMappable(cmap="Blues", norm=plt.Normalize(0, 1))
     cb = fig.colorbar(sm, ax=axes, shrink=0.6, location="right")
-    cb.set_label("15-minute index (share of 7 categories reachable)", fontsize=9, color=INK2)
+    cb.set_label(TEXT[lang]["index_cb"], fontsize=9, color=INK2)
     fig.text(
-        0.01, 0.01, "© OpenStreetMap contributors · Kontur Population (CC BY 4.0)", fontsize=7, color=INK2
+        0.01,
+        0.01,
+        "© OpenStreetMap contributors (ODbL) · Kontur Population (CC BY 4.0) · Open-Meteo.com (CC BY 4.0)",
+        fontsize=7,
+        color=INK2,
     )
     fig.savefig(out, dpi=200, facecolor=SURFACE, bbox_inches="tight")
     plt.close(fig)

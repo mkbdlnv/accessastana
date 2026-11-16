@@ -25,6 +25,8 @@ from accessastana.analysis.graph import WalkGraph
 
 @dataclass
 class ScenarioOutcome:
+    """Result of `apply_scenario`: new distances, nearest facilities and the change mask."""
+
     distance_m: np.ndarray
     facility: np.ndarray
     changed: np.ndarray  # bool mask of cells whose distance changed
@@ -42,6 +44,7 @@ def apply_scenario(
     new_id_start: int = -1000,
     limit_m: float = ROUTING_CUTOFF_M,
 ) -> ScenarioOutcome:
+    """Recompute only the cells affected by removed and added facilities (exact)."""
     dist, fac = base_dist.copy(), base_fac.copy()
     recomputed = 0
     remaining = dest

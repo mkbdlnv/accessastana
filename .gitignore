@@ -18,3 +18,4 @@ frontend/dist/
 .DS_Store
 backups/
 docs/final/evidence/*.tmp
+docs/final/_review/

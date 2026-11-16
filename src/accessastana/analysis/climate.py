@@ -67,6 +67,7 @@ def profile_shares(labels: pd.Series, months: list[int]) -> dict[str, float]:
 
 
 def climate_summary(daily: pd.DataFrame, months: list[int]) -> dict[str, float]:
+    """Descriptive statistics of the days in `months` (for the report's climate table)."""
     df = daily.copy()
     if "time" in df.columns:
         df.index = pd.to_datetime(df["time"])

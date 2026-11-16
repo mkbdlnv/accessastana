@@ -1,0 +1,40 @@
+%% UML-диаграмма развёртывания
+flowchart TB
+  classDef node fill:#eef4fb,stroke:#2a78d6,stroke-width:1.5px,color:#0b0b0b
+  classDef art fill:#ffffff,stroke:#52514e,color:#0b0b0b
+  classDef ext fill:#f4f3f0,stroke:#52514e,stroke-dasharray:4 3,color:#0b0b0b
+
+  subgraph DEV["«device» Ноутбук разработчика (офлайн-предобработка)"]
+    direction TB
+    DC["«execution environment» Docker Desktop"]:::node
+    PGD[("«container» postgis/postgis:17-3.5")]:::art
+    CLIA["«artifact» accessastana CLI<br/>(uv, Python 3.12, osmium, osmnx)"]:::art
+    DUMP["«artifact» accessastana-YYYYMMDD.dump"]:::art
+    CLIA --> PGD
+    PGD -- "scripts/export_db.sh" --> DUMP
+  end
+
+  subgraph GH["«device» GitHub"]
+    ACT["«execution environment» GitHub Actions<br/>ci.yml: ruff, mypy, pytest + PostGIS, frontend<br/>build.yml: образы linux/amd64"]:::node
+    GHCR[("«artifact» GHCR:<br/>…-api, …-frontend")]:::art
+    ACT --> GHCR
+  end
+
+  subgraph AWS["«device» AWS EC2 t3.medium, Ubuntu 24.04 (AWS Academy)"]
+    direction TB
+    DE["«execution environment» Docker Engine + docker-compose.prod.yml"]:::node
+    NG["«container» frontend<br/>nginx: SPA + прокси /api → api:8000<br/>порт 80 (публичный)"]:::art
+    AP["«container» api<br/>uvicorn ×2, alembic upgrade при старте<br/>CityEngine в памяти"]:::art
+    DBP[("«container» db: PostGIS<br/>порт 5432 не публикуется")]:::art
+    VOL[("«volume» pgdata, reports")]:::art
+    NG --> AP --> DBP
+    DBP --- VOL
+  end
+
+  BR["«device» Браузер пользователя"]:::node
+  TL[(OpenFreeMap тайлы)]:::ext
+
+  DUMP -- "scp + scripts/restore_db.sh" --> DBP
+  GHCR -- "docker compose pull" --> DE
+  BR -- "HTTP :80" --> NG
+  BR -- "HTTPS" --> TL

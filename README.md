@@ -22,8 +22,13 @@ Other Kazakhstan cities can be added with one YAML file in `config/cities/`.
 | Data sources, licences, versions, limitations | [docs/data-sources.md](docs/data-sources.md) |
 | Phase 0 data spike | [docs/phase0-spike-report.md](docs/phase0-spike-report.md) |
 | First results for Astana | [docs/results-astana.md](docs/results-astana.md) |
-| API contract | [docs/api-contract.md](docs/api-contract.md) (live OpenAPI at `/docs`) |
+| API contract | [docs/api.md](docs/api.md) (OpenAPI: `docs/openapi.json`, live at `/docs`) |
 | AWS deployment | [docs/deployment-aws.md](docs/deployment-aws.md) |
+| Requirements (FR/NFR, user stories, use cases) | [docs/requirements.md](docs/requirements.md) |
+| Risk register | [docs/risks.md](docs/risks.md) |
+| User manual / System manual | [docs/user-manual.md](docs/user-manual.md) · [docs/system-manual.md](docs/system-manual.md) |
+| UML diagrams | [docs/diagrams/](docs/diagrams/) |
+| **Use of generative AI** | [docs/AI_USAGE.md](docs/AI_USAGE.md) |
 | Frontend | [frontend/README.md](frontend/README.md) |
 
 ## Quick start (local)
@@ -31,7 +36,7 @@ Other Kazakhstan cities can be added with one YAML file in `config/cities/`.
 Requirements: Docker, [uv](https://docs.astral.sh/uv/) (Python 3.12 is installed by uv), Node 22.
 
 ```bash
-cp .env.example .env                       # adjust ports/passwords (DB_PORT if 5432 is taken)
+cp .env.example .env                       # set passwords; if port 5432 is taken, change DB_PORT and both URLs
 docker compose up -d db
 uv sync --extra ingest                     # Python deps incl. osmium/osmnx for ingestion
 uv run accessastana db-upgrade             # Alembic migrations
@@ -102,12 +107,19 @@ Dependabot keeps uv/npm/actions/docker dependencies updated.
 
 | Parameter | Value | Source |
 |---|---|---|
-| Summer walking speed | 1.33 m/s (4.8 km/h) | within Knoblauch et al. (1996), TRR 1538 |
-| Winter speed factor (compact snow) | × 0.935 | Fossum (NTNU), 2021: 1.43 vs 1.53 m/s on asphalt |
-| Severe-cold speed factor (ice) | × 0.830 | Fossum, 2021: 1.27 vs 1.53 m/s |
+| Summer walking speed | 1.33 m/s (4.8 km/h) | assumption between the design value 1.22 m/s (Knoblauch et al., 1996) and observed adult means ≈ 1.5 m/s (Fossum & Ryeng, 2021) |
+| Winter speed factor (compact snow) | × 0.9285 → 1.235 m/s | Fossum & Ryeng (2021), Table 3: 1.403 vs 1.511 m/s on asphalt |
+| Severe-cold speed factor (ice) | × 0.8319 → 1.106 m/s | Fossum & Ryeng (2021), Table 3: 1.257 vs 1.511 m/s |
 | Severe-cold day | wind chill ≤ −28 | ECCC wind-chill guidance (frostbite risk in 10–30 min) |
-| Acceptable walk | 15 min (10 min on severe-cold days) | 15-minute city; 10 min is a stated team assumption |
+| Acceptable walk | 15 min (10 min on severe-cold days) | 15-minute city (Moreno et al., 2021); 10 min is a team assumption, sensitivity 8/10/12 min in the report |
 | Population | Kontur × 1.876 | calibrated to BNS 2025-01-01 total |
+
+## Use of generative AI
+
+This project was developed with an AI coding assistant (Claude Code, Anthropic):
+most of the code, tests and documentation were produced by the assistant under
+the team's direction. The disclosure required by the course policy, with the
+details, is in [docs/AI_USAGE.md](docs/AI_USAGE.md).
 
 ## Attribution
 

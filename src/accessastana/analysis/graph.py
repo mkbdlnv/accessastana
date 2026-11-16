@@ -28,6 +28,8 @@ EPS = 1e-3
 
 @dataclass
 class WalkGraph:
+    """Undirected pedestrian graph as a CSR matrix plus node coordinates and a KD-tree."""
+
     node_ids: np.ndarray  # (n,) original OSM ids
     xy: np.ndarray  # (n, 2) metric coordinates
     matrix: csr_matrix  # (n, n) symmetric, metres
@@ -38,6 +40,7 @@ class WalkGraph:
 
     @property
     def n(self) -> int:
+        """Number of graph nodes."""
         return int(self.node_ids.shape[0])
 
     @classmethod

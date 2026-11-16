@@ -10,11 +10,15 @@ Method = Literal["max_covering", "p_median"]
 
 
 class Health(BaseModel):
+    """Service health."""
+
     status: str
     db: str
 
 
 class CityOut(BaseModel):
+    """City metadata for the UI."""
+
     slug: str
     name: dict[str, str]
     center: list[float]
@@ -24,11 +28,15 @@ class CityOut(BaseModel):
 
 
 class CategoryOut(BaseModel):
+    """Facility category."""
+
     key: str
     label: str
 
 
 class SeasonOut(BaseModel):
+    """Season profile."""
+
     key: str
     label: str
     speed_mps: float
@@ -37,6 +45,8 @@ class SeasonOut(BaseModel):
 
 
 class CellValue(BaseModel):
+    """Value of one H3 cell (minutes or index)."""
+
     h3: str
     value: float | None
     reachable: bool
@@ -44,6 +54,8 @@ class CellValue(BaseModel):
 
 
 class AccessibilityOut(BaseModel):
+    """Accessibility layer for one city, category and season."""
+
     city: str
     category: str
     season: str
@@ -53,12 +65,16 @@ class AccessibilityOut(BaseModel):
 
 
 class CategorySummary(BaseModel):
+    """Population-weighted shares for one category."""
+
     share_within: dict[str, float]
     share_reachable: float
     mean_minutes: float | None
 
 
 class DistrictSummary(BaseModel):
+    """Summary of one district (or the whole city)."""
+
     id: int | None
     name: str
     population: float
@@ -67,6 +83,8 @@ class DistrictSummary(BaseModel):
 
 
 class DistrictsSummaryOut(BaseModel):
+    """District summary table."""
+
     city: str
     season: str
     thresholds: list[float]
@@ -75,12 +93,16 @@ class DistrictsSummaryOut(BaseModel):
 
 
 class NewFacility(BaseModel):
+    """A proposed facility location."""
+
     lon: float = Field(ge=-180, le=180)
     lat: float = Field(ge=-90, le=90)
     name: str | None = None
 
 
 class ScenarioIn(BaseModel):
+    """What-if scenario request."""
+
     city: str
     category: str
     season: str
@@ -91,12 +113,16 @@ class ScenarioIn(BaseModel):
 
 
 class Metrics(BaseModel):
+    """Headline accessibility metrics."""
+
     population_reachable: float
     share_reachable: float
     mean_minutes: float | None
 
 
 class ChangedCell(BaseModel):
+    """A cell whose walking time changed in a scenario."""
+
     h3: str
     before: float | None
     after: float | None
@@ -104,6 +130,8 @@ class ChangedCell(BaseModel):
 
 
 class ScenarioOut(BaseModel):
+    """What-if scenario result."""
+
     scenario_id: int | None
     before: Metrics
     after: Metrics
@@ -111,6 +139,8 @@ class ScenarioOut(BaseModel):
 
 
 class OptimizeIn(BaseModel):
+    """Facility-location optimisation request."""
+
     city: str
     category: str
     season: str
@@ -119,6 +149,8 @@ class OptimizeIn(BaseModel):
 
 
 class Location(BaseModel):
+    """A recommended site and the population it newly covers."""
+
     h3: str
     lon: float
     lat: float
@@ -126,6 +158,8 @@ class Location(BaseModel):
 
 
 class OptimizeOut(BaseModel):
+    """Optimisation result."""
+
     method: Method
     k: int
     status: str

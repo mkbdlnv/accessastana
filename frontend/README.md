@@ -2,7 +2,7 @@
 
 Single-page app (React + Vite + TypeScript) for the climate-adjusted walking
 accessibility of social infrastructure in Astana. It talks only to the FastAPI
-backend described in [`../docs/api-contract.md`](../docs/api-contract.md).
+backend described in [`../docs/api.md`](../docs/api.md).
 
 ## Stack
 

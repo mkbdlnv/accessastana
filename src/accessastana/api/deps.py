@@ -19,29 +19,35 @@ from accessastana.settings import get_settings
 
 
 def get_session(request: Request) -> Iterator[Session]:
+    """One SQLAlchemy session per request, closed afterwards."""
     maker = request.app.state.sessionmaker
     with maker() as s:
         yield s
 
 
 def get_engines(request: Request) -> EngineCache:
+    """The process-wide EngineCache stored on the app."""
     return request.app.state.engines
 
 
 def catalog(s: Session = Depends(get_session)) -> CatalogService:
+    """CatalogService for the request."""
     return CatalogService(s)
 
 
 def accessibility(s: Session = Depends(get_session)) -> AccessibilityService:
+    """AccessibilityService for the request."""
     return AccessibilityService(s)
 
 
 def scenarios(
     s: Session = Depends(get_session), engines: EngineCache = Depends(get_engines)
 ) -> ScenarioService:
+    """ScenarioService with limits from settings."""
     st = get_settings()
     return ScenarioService(s, engines, st.scenario_max_facilities, st.optimize_max_k)
 
 
 def default_sessionmaker() -> object:
+    """Session factory for the configured database URL."""
     return get_sessionmaker()

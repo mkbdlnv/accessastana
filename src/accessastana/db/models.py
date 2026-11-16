@@ -34,10 +34,14 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
+    """Declarative base for all tables."""
+
     type_annotation_map: ClassVar[dict[Any, Any]] = {dict[str, Any]: JSON}
 
 
 class City(Base):
+    """A city with its boundary; parent of all per-city data."""
+
     __tablename__ = "cities"
     slug: Mapped[str] = mapped_column(String(64), primary_key=True)
     name_en: Mapped[str] = mapped_column(String(128))
@@ -68,6 +72,8 @@ class ImportRun(Base):
 
 
 class District(Base):
+    """Administrative district polygon."""
+
     __tablename__ = "districts"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     city_slug: Mapped[str] = mapped_column(ForeignKey("cities.slug", ondelete="CASCADE"), index=True)
@@ -78,6 +84,8 @@ class District(Base):
 
 
 class H3Cell(Base):
+    """H3 analysis cell with raw and calibrated population."""
+
     __tablename__ = "h3_cells"
     city_slug: Mapped[str] = mapped_column(ForeignKey("cities.slug", ondelete="CASCADE"), primary_key=True)
     h3: Mapped[str] = mapped_column(String(16), primary_key=True)
@@ -90,6 +98,8 @@ class H3Cell(Base):
 
 
 class NetworkNode(Base):
+    """Pedestrian graph node (OSM node id)."""
+
     __tablename__ = "network_nodes"
     city_slug: Mapped[str] = mapped_column(ForeignKey("cities.slug", ondelete="CASCADE"), primary_key=True)
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)  # OSM node id
@@ -112,6 +122,8 @@ class NetworkEdge(Base):
 
 
 class Poi(Base):
+    """Facility point of a category."""
+
     __tablename__ = "pois"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     city_slug: Mapped[str] = mapped_column(ForeignKey("cities.slug", ondelete="CASCADE"))
@@ -132,6 +144,8 @@ class Poi(Base):
 
 
 class AccessibilityResult(Base):
+    """Precomputed walking minutes per cell, category and season."""
+
     __tablename__ = "accessibility_results"
     city_slug: Mapped[str] = mapped_column(ForeignKey("cities.slug", ondelete="CASCADE"), primary_key=True)
     h3: Mapped[str] = mapped_column(String(16), primary_key=True)
@@ -158,6 +172,8 @@ class ClimateProfile(Base):
 
 
 class Scenario(Base):
+    """A saved what-if scenario and its metrics."""
+
     __tablename__ = "scenarios"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     city_slug: Mapped[str] = mapped_column(ForeignKey("cities.slug", ondelete="CASCADE"))
@@ -169,6 +185,8 @@ class Scenario(Base):
 
 
 class ScenarioFacility(Base):
+    """Facility added or removed in a saved scenario."""
+
     __tablename__ = "scenario_facilities"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     scenario_id: Mapped[int] = mapped_column(ForeignKey("scenarios.id", ondelete="CASCADE"), index=True)

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Lang } from '../api/client';
 import { I18nContext, type I18nValue } from './context';
-import { DEFAULT_LANG, LANGS, LOCALES, translate } from './dictionaries';
+import { DEFAULT_LANG, LANGS, numberLocale, translate } from './dictionaries';
 
 const STORAGE_KEY = 'accessastana.lang';
 
@@ -29,7 +29,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [lang]);
 
   const value = useMemo<I18nValue>(() => {
-    const locale = LOCALES[lang];
+    const locale = numberLocale(lang);
     return {
       lang,
       setLang,

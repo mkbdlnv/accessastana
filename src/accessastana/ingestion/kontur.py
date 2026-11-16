@@ -37,6 +37,7 @@ def cover_polygon(boundary_4326: Any, resolution: int) -> list[str]:
 
 
 def cell_polygon(cell: str) -> Polygon:
+    """H3 cell boundary as a shapely Polygon (lon/lat)."""
     return Polygon([(lng, lat) for lat, lng in h3.cell_to_boundary(cell)])
 
 
@@ -66,6 +67,8 @@ def calibrate(
 
 
 class KonturLoader(BaseLoader):
+    """Kontur population → calibrated H3 cells."""
+
     name = "population"
 
     def source_files(self) -> list[Path]:

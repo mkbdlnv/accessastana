@@ -13,6 +13,19 @@ export const dictionaries: Record<Lang, Dict> = { en, ru, kk };
 /** BCP-47 locale used for number formatting. */
 export const LOCALES: Record<Lang, string> = { en: 'en-GB', ru: 'ru-RU', kk: 'kk-KZ' };
 
+/**
+ * Locale actually passed to Intl.NumberFormat. Some browser builds ship no
+ * ICU data for Kazakh, and `kk-KZ` then silently falls back to English
+ * formatting (206,759 / 0.67). Kazakhstan uses the same conventions as
+ * Russian (space as thousands separator, decimal comma), so `ru-RU` is the
+ * correct fallback.
+ */
+export function numberLocale(lang: Lang): string {
+  const wanted = LOCALES[lang];
+  if (lang === 'kk' && Intl.NumberFormat.supportedLocalesOf([wanted]).length === 0) return LOCALES.ru;
+  return wanted;
+}
+
 export type Vars = Record<string, string | number>;
 
 /** Replace {name} placeholders with values; unknown placeholders are kept. */

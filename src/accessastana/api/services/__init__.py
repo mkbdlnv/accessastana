@@ -39,6 +39,7 @@ class BadRequest(ValueError):
 def check(
     city: str | None = None, category: str | None = None, season: str | None = None, allow_index: bool = False
 ) -> None:
+    """Validate city/category/season against the config; raise NotFound otherwise."""
     from accessastana.config import list_city_slugs
 
     if city is not None and city not in list_city_slugs():
@@ -51,10 +52,13 @@ def check(
 
 # --------------------------------------------------------------------------- catalog
 class CatalogService:
+    """Cities, categories and season profiles."""
+
     def __init__(self, session: Session) -> None:
         self.cities = CityRepository(session)
 
     def list_cities(self) -> list[S.CityOut]:
+        """All ingested cities with config metadata and attribution."""
         out = []
         for slug in self.cities.all_slugs():
             cfg, row = load_city(slug), self.cities.get(slug) or {}
@@ -72,9 +76,11 @@ class CatalogService:
 
     @staticmethod
     def list_categories() -> list[S.CategoryOut]:
+        """Categories from config/categories.yaml."""
         return [S.CategoryOut(key=k, label=c.label) for k, c in load_categories().items()]
 
     def list_seasons(self, city: str) -> list[S.SeasonOut]:
+        """API season profiles with the measured share of winter days."""
         check(city=city)
         cfg, shares = load_seasons(), self.cities.climate_shares(city)
         return [
@@ -91,6 +97,8 @@ class CatalogService:
 
 # --------------------------------------------------------------------------- accessibility
 class AccessibilityService:
+    """Accessibility layers and district summaries from precomputed results."""
+
     def __init__(self, session: Session) -> None:
         self.repo = AccessibilityRepository(session)
         self.cities = CityRepository(session)
@@ -109,6 +117,7 @@ class AccessibilityService:
         return meta.join(wide)
 
     def accessibility(self, city: str, category: str, season: str) -> S.AccessibilityOut:
+        """Per-cell values for a category (minutes) or for the composite index."""
         check(city, category, season, allow_index=True)
         prof = load_seasons().profiles[season]
         if category == INDEX:
@@ -143,6 +152,7 @@ class AccessibilityService:
         )
 
     def as_geojson(self, out: S.AccessibilityOut) -> dict[str, Any]:
+        """Attach H3 polygons to an accessibility layer."""
         import json
 
         geoms = self.repo.cells_geojson(out.city)
@@ -157,6 +167,7 @@ class AccessibilityService:
         }
 
     def district_summary(self, city: str, season: str) -> S.DistrictsSummaryOut:
+        """Per-district and city-wide population shares and index."""
         check(city=city, season=season)
         seasons = load_seasons()
         prof, thresholds = seasons.profiles[season], seasons.summary_thresholds
@@ -215,21 +226,26 @@ class EngineCache:
         self._lock = threading.Lock()
 
     def get(self, city: str) -> CityEngine:
+        """Engine for a city, loading it on first use (thread-safe)."""
         with self._lock:
             if city not in self._engines:
                 self._engines[city] = self._loader(city)
             return self._engines[city]
 
     def put(self, city: str, engine: CityEngine) -> None:
+        """Insert a ready engine (used by tests)."""
         self._engines[city] = engine
 
 
 class ScenarioService:
+    """On-demand scenarios and optimisation using the cached CityEngine."""
+
     def __init__(self, session: Session, engines: EngineCache, max_facilities: int, max_k: int) -> None:
         self.session, self.engines = session, engines
         self.max_facilities, self.max_k = max_facilities, max_k
 
     def run(self, req: S.ScenarioIn) -> S.ScenarioOut:
+        """Run (and optionally save) a what-if scenario."""
         check(req.city, req.category, req.season)
         if len(req.add) + len(req.remove) > self.max_facilities:
             raise BadRequest(f"at most {self.max_facilities} added/removed facilities per scenario")
@@ -264,6 +280,7 @@ class ScenarioService:
         )
 
     def optimize(self, req: S.OptimizeIn) -> S.OptimizeOut:
+        """Run facility-location optimisation within the configured limits."""
         check(req.city, req.category, req.season)
         if req.k > self.max_k:
             raise BadRequest(f"k must be <= {self.max_k}")

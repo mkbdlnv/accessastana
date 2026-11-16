@@ -12,10 +12,13 @@ from accessastana.db.repositories import read_df
 
 
 class CityRepository:
+    """Queries on cities, districts and climate profiles."""
+
     def __init__(self, session: Session) -> None:
         self.s = session
 
     def get(self, slug: str) -> dict[str, Any] | None:
+        """City row as a dict, or None."""
         row = (
             self.s.execute(
                 text(
@@ -29,15 +32,18 @@ class CityRepository:
         return dict(row) if row else None
 
     def all_slugs(self) -> list[str]:
+        """Slugs of all ingested cities."""
         return list(self.s.scalars(text("SELECT slug FROM cities ORDER BY slug")))
 
     def climate_shares(self, slug: str) -> dict[str, float | None]:
+        """Season key → share of winter days (from the climate loader)."""
         rows = self.s.execute(
             text("SELECT season, share_of_days FROM climate_profiles WHERE city_slug=:c"), {"c": slug}
         )
         return {r.season: r.share_of_days for r in rows}
 
     def districts_geojson(self, slug: str) -> dict[str, Any]:
+        """District polygons as a GeoJSON FeatureCollection."""
         df = read_df(
             self.s,
             "SELECT id, name, name_en, ST_AsGeoJSON(geometry, 6) g FROM districts WHERE city_slug=:c "
@@ -48,6 +54,8 @@ class CityRepository:
 
 
 class AccessibilityRepository:
+    """Queries on precomputed accessibility results and cell geometries."""
+
     def __init__(self, session: Session) -> None:
         self.s = session
 
@@ -67,6 +75,7 @@ class AccessibilityRepository:
         )
 
     def cells_geojson(self, slug: str) -> dict[str, str]:
+        """H3 id → cell polygon as a GeoJSON string."""
         df = read_df(
             self.s, "SELECT h3, ST_AsGeoJSON(geometry, 6) g FROM h3_cells WHERE city_slug=:c", c=slug
         )
@@ -74,10 +83,13 @@ class AccessibilityRepository:
 
 
 class PoiRepository:
+    """Queries on facility points."""
+
     def __init__(self, session: Session) -> None:
         self.s = session
 
     def geojson(self, slug: str, category: str | None) -> dict[str, Any]:
+        """OSM facility points (optionally one category) as GeoJSON."""
         df = read_df(
             self.s,
             """SELECT id, name, category, ST_AsGeoJSON(geometry, 6) g FROM pois

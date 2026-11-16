@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 
 
 def run_accessibility(slug: str, database_url: str | None = None) -> dict[str, Any]:
+    """Compute walking minutes for every cell, category and API season and store them."""
     t0 = time.perf_counter()
     seasons = load_seasons()
     with session_scope(database_url) as s:

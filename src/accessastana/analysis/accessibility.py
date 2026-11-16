@@ -37,10 +37,12 @@ class Destinations:
     xy: np.ndarray  # (m, 2) metric
 
     def without(self, removed: Sequence[int]) -> Destinations:
+        """Copy without the given facility ids (all their destination points)."""
         keep = ~np.isin(self.facility_ids, np.asarray(list(removed), dtype=self.facility_ids.dtype))
         return Destinations(self.facility_ids[keep], self.xy[keep])
 
     def plus(self, ids: np.ndarray, xy: np.ndarray) -> Destinations:
+        """Copy with extra destination points appended (ids may repeat for multi-point facilities)."""
         return Destinations(np.concatenate([self.facility_ids, ids]), np.vstack([self.xy, xy]))
 
     def __len__(self) -> int:
@@ -95,6 +97,18 @@ def metrics(minutes: np.ndarray, population: np.ndarray, max_minutes: float) -> 
         "share_reachable": share_within(minutes, population, max_minutes),
         "mean_minutes": mean_minutes(minutes, population),
     }
+
+
+def threshold_sensitivity(
+    minutes: np.ndarray, population: np.ndarray, thresholds: Sequence[float]
+) -> dict[float, float]:
+    """Share of residents within each candidate acceptable time.
+
+    Used to test how strongly a conclusion depends on an ASSUMED threshold
+    (e.g. 8 / 10 / 12 min on severe-cold days, config/seasons.yaml). Walking
+    speed stays fixed; only the acceptable time changes.
+    """
+    return {float(t): share_within(minutes, population, t) for t in thresholds}
 
 
 def composite_index(

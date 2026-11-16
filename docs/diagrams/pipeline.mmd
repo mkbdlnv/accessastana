@@ -1,0 +1,20 @@
+%% Поток данных: от открытых источников к результатам
+flowchart LR
+  classDef src fill:#f4f3f0,stroke:#52514e,color:#0b0b0b
+  classDef step fill:#eef4fb,stroke:#2a78d6,color:#0b0b0b
+  classDef out fill:#fff7e6,stroke:#c98500,color:#0b0b0b
+  A[(OSM .pbf<br/>Geofabrik 2026-11-15)]:::src --> B1[Граница и районы<br/>relation 3087155]:::step
+  A --> B2[Пешеходная сеть<br/>pyosmium → OSM XML → OSMnx]:::step
+  A --> B3[Объекты 7 категорий<br/>теги YAML, дедупликация]:::step
+  K[(Kontur Population<br/>H3 r8, 2023-11-01)]:::src --> B4[Ячейки H3 + калибровка<br/>к БНС 1 528 887]:::step
+  M[(Open-Meteo<br/>2015–2024)]:::src --> B5[Индекс охлаждения ветром<br/>→ доли дней по профилям]:::step
+  B2 --> C1[Мультиисточниковый Dijkstra<br/>расстояние до ближайшего объекта]:::step
+  B3 --> C1
+  B4 --> C1
+  B5 --> C2[Сезонные профили<br/>скорость, допустимое время]:::step
+  C1 --> C3[Минуты = расстояние / скорость<br/>× 7 категорий × 3 сезона]:::step
+  C2 --> C3
+  C3 --> D1[(accessibility_results)]:::out
+  D1 --> D2[Районы, 15-мин индекс,<br/>чувствительность]:::out
+  D1 --> D3[Сценарии и оптимизация<br/>по запросу API]:::out
+  D2 --> D4[reports/: CSV, PNG, PDF]:::out

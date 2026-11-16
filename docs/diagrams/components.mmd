@@ -1,0 +1,58 @@
+%% UML-диаграмма компонентов (нотация компонент/интерфейс в синтаксисе Mermaid flowchart)
+flowchart LR
+  classDef comp fill:#eef4fb,stroke:#2a78d6,stroke-width:1.5px,color:#0b0b0b
+  classDef ext fill:#f4f3f0,stroke:#52514e,stroke-dasharray:4 3,color:#0b0b0b
+  classDef db fill:#fff7e6,stroke:#c98500,color:#0b0b0b
+
+  subgraph FE["«component» Frontend (React + TS)"]
+    UI["MapView, Controls,<br/>ScenarioPanel, OptimizePanel,<br/>DistrictsPanel"]:::comp
+    CL["api/client.ts<br/>(типизированный HTTP-клиент)"]:::comp
+    I18N["i18n kk / ru / en"]:::comp
+    UI --> CL
+    UI --> I18N
+  end
+
+  subgraph API["«component» api (FastAPI)"]
+    R["routers<br/>(HTTP ↔ домен)"]:::comp
+    S["services<br/>(CatalogService, AccessibilityService,<br/>ScenarioService, EngineCache)"]:::comp
+    RP["repositories<br/>(SQL)"]:::comp
+    R --> S --> RP
+  end
+
+  subgraph AN["«component» analysis (чистые алгоритмы)"]
+    ENG["CityEngine (Facade)"]:::comp
+    G["graph.WalkGraph<br/>(Dijkstra, scipy)"]:::comp
+    ACC["accessibility"]:::comp
+    SC["scenarios"]:::comp
+    LOC["location<br/>(MCLP, p-median, OR-Tools)"]:::comp
+    CLM["climate"]:::comp
+    ENG --> G & ACC & SC & LOC
+  end
+
+  subgraph ING["«component» ingestion"]
+    BL["BaseLoader<br/>(Strategy + Template Method)"]:::comp
+    LD["OsmBoundary, OsmNetwork, OsmPoi,<br/>Kontur, OpenMeteo loaders"]:::comp
+    LD -.реализует.-> BL
+  end
+
+  REP["«component» reporting<br/>(CSV, PNG, PDF)"]:::comp
+  CLI["«component» cli (typer)"]:::comp
+  DBL["«component» db<br/>(models, sessions, Alembic)"]:::comp
+  PG[("PostgreSQL + PostGIS")]:::db
+
+  CL -- "REST / JSON (/api/*)" --> R
+  S --> ENG
+  RP --> DBL
+  DBL --> PG
+  CLI --> ING & REP
+  CLI -- "jobs.run_accessibility" --> ENG
+  ING --> DBL
+  ING --> CLM
+  REP --> DBL
+
+  OSM[(Geofabrik .osm.pbf)]:::ext
+  KON[(Kontur H3 GPKG)]:::ext
+  OM[(Open-Meteo API)]:::ext
+  TILES[(OpenFreeMap тайлы)]:::ext
+  OSM & KON & OM --> LD
+  UI -- "векторные тайлы" --> TILES

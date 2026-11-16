@@ -18,6 +18,7 @@ from accessastana.ingestion.base import BaseLoader, bulk_insert, ewkt
 
 
 def as_multipolygon(g: BaseGeometry) -> MultiPolygon:
+    """Wrap a Polygon into a MultiPolygon (DB column type)."""
     return MultiPolygon([g]) if isinstance(g, Polygon) else g  # type: ignore[return-value]
 
 
@@ -57,6 +58,8 @@ def read_admin_areas(pbf: Path, city_relation_id: int, district_level: str) -> d
 
 
 class OsmBoundaryLoader(BaseLoader):
+    """City boundary and districts from the OSM extract."""
+
     name = "osm-boundary"
 
     def source_files(self) -> list[Path]:

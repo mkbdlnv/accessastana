@@ -1,0 +1,9 @@
+# 2026-11-16 14:25 API latency on Astana data via nginx → API (docker compose on a MacBook, Apple Silicon; api image arm64, PostGIS amd64 under Rosetta). n=20 after 1 warm-up
+base=http://localhost:8080/api n=20
+endpoint                                     p50     p95     max
+GET /accessibility (school, winter)        0.012   0.014   0.014
+GET /accessibility (index, summer)         0.034   0.070   0.070
+GET /districts/summary                     0.031   0.061   0.061
+POST /scenarios (+2 clinics, winter)       0.006   0.006   0.006
+POST /optimize (MCLP k=5)                  0.032   0.037   0.037
+POST /optimize (p-median k=5)              0.330   0.806   0.827

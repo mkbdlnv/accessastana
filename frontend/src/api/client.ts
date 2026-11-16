@@ -1,5 +1,5 @@
 /**
- * Typed fetch wrappers for the AccessAstana API (see docs/api-contract.md).
+ * Typed fetch wrappers for the AccessAstana API (see docs/api.md and docs/openapi.json).
  *
  * The TypeScript types below mirror the JSON shapes of the contract one-to-one,
  * so a contract change shows up as a compile error in the components.

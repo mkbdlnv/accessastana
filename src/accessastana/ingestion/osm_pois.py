@@ -165,6 +165,8 @@ def prepare_category(gdf: gpd.GeoDataFrame, cfg: CategoryConfig, metric_crs: str
 
 
 class OsmPoiLoader(BaseLoader):
+    """OSM facilities by category → `pois`."""
+
     name = "osm-pois"
 
     def source_files(self) -> list[Path]:
