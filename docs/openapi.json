@@ -1,0 +1,1121 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AccessAstana API",
+    "description": "Climate-adjusted walking accessibility of social infrastructure. Data © OpenStreetMap contributors (ODbL), Kontur Population (CC BY 4.0), Open-Meteo (CC BY 4.0).",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health",
+        "description": "Liveness and database check; 503 when the database is unreachable.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cities": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Cities",
+        "description": "Cities with map centre, population total and required data attribution.",
+        "operationId": "cities_cities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CityOut"
+                  },
+                  "type": "array",
+                  "title": "Response Cities Cities Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Categories",
+        "description": "Facility categories (config/categories.yaml).",
+        "operationId": "categories_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryOut"
+                  },
+                  "type": "array",
+                  "title": "Response Categories Categories Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/seasons": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Seasons",
+        "description": "Season profiles: walking speed, acceptable minutes and share of winter days.",
+        "operationId": "seasons_seasons_get",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "astana",
+              "title": "City"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeasonOut"
+                  },
+                  "title": "Response Seasons Seasons Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accessibility": {
+      "get": {
+        "tags": [
+          "accessibility"
+        ],
+        "summary": "Accessibility",
+        "description": "Walking minutes (or the 15-minute index) per H3 cell, as JSON or GeoJSON.",
+        "operationId": "accessibility_accessibility_get",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "City"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Category"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Season"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "json",
+                "geojson"
+              ],
+              "type": "string",
+              "default": "json",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/districts/summary": {
+      "get": {
+        "tags": [
+          "accessibility"
+        ],
+        "summary": "Districts Summary",
+        "description": "Population shares within 5/10/15 min and the 15-minute index per district.",
+        "operationId": "districts_summary_districts_summary_get",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "City"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Season"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DistrictsSummaryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/districts": {
+      "get": {
+        "tags": [
+          "accessibility"
+        ],
+        "summary": "Districts",
+        "description": "District boundaries as GeoJSON.",
+        "operationId": "districts_districts_get",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "City"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Districts Districts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pois": {
+      "get": {
+        "tags": [
+          "accessibility"
+        ],
+        "summary": "Pois",
+        "description": "OSM facility points as GeoJSON (their ids can be removed in scenarios).",
+        "operationId": "pois_pois_get",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "City"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Pois Pois Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scenarios": {
+      "post": {
+        "tags": [
+          "planning"
+        ],
+        "summary": "Scenario",
+        "description": "What-if: add and/or remove facilities and get before/after metrics.",
+        "operationId": "scenario_scenarios_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/optimize": {
+      "post": {
+        "tags": [
+          "planning"
+        ],
+        "summary": "Optimize",
+        "description": "Recommend k new facility locations (maximal covering or p-median).",
+        "operationId": "optimize_optimize_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptimizeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/{city}.pdf": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Report Pdf",
+        "description": "Serve reports/<city>/report.pdf; build it on first request (or refresh=true).",
+        "operationId": "report_pdf_reports__city__pdf_get",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "City"
+            }
+          },
+          {
+            "name": "refresh",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Refresh"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CategoryOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "CategoryOut",
+        "description": "Facility category."
+      },
+      "CategorySummary": {
+        "properties": {
+          "share_within": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Share Within"
+          },
+          "share_reachable": {
+            "type": "number",
+            "title": "Share Reachable"
+          },
+          "mean_minutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "share_within",
+          "share_reachable",
+          "mean_minutes"
+        ],
+        "title": "CategorySummary",
+        "description": "Population-weighted shares for one category."
+      },
+      "ChangedCell": {
+        "properties": {
+          "h3": {
+            "type": "string",
+            "title": "H3"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "after": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "reachable_after": {
+            "type": "boolean",
+            "title": "Reachable After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "h3",
+          "before",
+          "after",
+          "reachable_after"
+        ],
+        "title": "ChangedCell",
+        "description": "A cell whose walking time changed in a scenario."
+      },
+      "CityOut": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Name"
+          },
+          "center": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Center"
+          },
+          "h3_resolution": {
+            "type": "integer",
+            "title": "H3 Resolution"
+          },
+          "population_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population Total"
+          },
+          "attribution": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Attribution"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "center",
+          "h3_resolution",
+          "population_total",
+          "attribution"
+        ],
+        "title": "CityOut",
+        "description": "City metadata for the UI."
+      },
+      "DistrictSummary": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "population": {
+            "type": "number",
+            "title": "Population"
+          },
+          "index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index"
+          },
+          "categories": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CategorySummary"
+            },
+            "type": "object",
+            "title": "Categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "population",
+          "index",
+          "categories"
+        ],
+        "title": "DistrictSummary",
+        "description": "Summary of one district (or the whole city)."
+      },
+      "DistrictsSummaryOut": {
+        "properties": {
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "thresholds": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Thresholds"
+          },
+          "districts": {
+            "items": {
+              "$ref": "#/components/schemas/DistrictSummary"
+            },
+            "type": "array",
+            "title": "Districts"
+          },
+          "city_total": {
+            "$ref": "#/components/schemas/DistrictSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "city",
+          "season",
+          "thresholds",
+          "districts",
+          "city_total"
+        ],
+        "title": "DistrictsSummaryOut",
+        "description": "District summary table."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "db": {
+            "type": "string",
+            "title": "Db"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "db"
+        ],
+        "title": "Health",
+        "description": "Service health."
+      },
+      "Location": {
+        "properties": {
+          "h3": {
+            "type": "string",
+            "title": "H3"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "population_gain": {
+            "type": "number",
+            "title": "Population Gain"
+          }
+        },
+        "type": "object",
+        "required": [
+          "h3",
+          "lon",
+          "lat",
+          "population_gain"
+        ],
+        "title": "Location",
+        "description": "A recommended site and the population it newly covers."
+      },
+      "Metrics": {
+        "properties": {
+          "population_reachable": {
+            "type": "number",
+            "title": "Population Reachable"
+          },
+          "share_reachable": {
+            "type": "number",
+            "title": "Share Reachable"
+          },
+          "mean_minutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "population_reachable",
+          "share_reachable",
+          "mean_minutes"
+        ],
+        "title": "Metrics",
+        "description": "Headline accessibility metrics."
+      },
+      "NewFacility": {
+        "properties": {
+          "lon": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Lon"
+          },
+          "lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Lat"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lon",
+          "lat"
+        ],
+        "title": "NewFacility",
+        "description": "A proposed facility location."
+      },
+      "OptimizeIn": {
+        "properties": {
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "k": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "K"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "max_covering",
+              "p_median"
+            ],
+            "title": "Method",
+            "default": "max_covering"
+          }
+        },
+        "type": "object",
+        "required": [
+          "city",
+          "category",
+          "season",
+          "k"
+        ],
+        "title": "OptimizeIn",
+        "description": "Facility-location optimisation request."
+      },
+      "OptimizeOut": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "max_covering",
+              "p_median"
+            ],
+            "title": "Method"
+          },
+          "k": {
+            "type": "integer",
+            "title": "K"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "solve_seconds": {
+            "type": "number",
+            "title": "Solve Seconds"
+          },
+          "locations": {
+            "items": {
+              "$ref": "#/components/schemas/Location"
+            },
+            "type": "array",
+            "title": "Locations"
+          },
+          "before": {
+            "$ref": "#/components/schemas/Metrics"
+          },
+          "after": {
+            "$ref": "#/components/schemas/Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "k",
+          "status",
+          "solve_seconds",
+          "locations",
+          "before",
+          "after"
+        ],
+        "title": "OptimizeOut",
+        "description": "Optimisation result."
+      },
+      "ScenarioIn": {
+        "properties": {
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "add": {
+            "items": {
+              "$ref": "#/components/schemas/NewFacility"
+            },
+            "type": "array",
+            "title": "Add",
+            "default": []
+          },
+          "remove": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Remove",
+            "default": []
+          },
+          "save": {
+            "type": "boolean",
+            "title": "Save",
+            "default": false
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "city",
+          "category",
+          "season"
+        ],
+        "title": "ScenarioIn",
+        "description": "What-if scenario request."
+      },
+      "ScenarioOut": {
+        "properties": {
+          "scenario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Id"
+          },
+          "before": {
+            "$ref": "#/components/schemas/Metrics"
+          },
+          "after": {
+            "$ref": "#/components/schemas/Metrics"
+          },
+          "changed_cells": {
+            "items": {
+              "$ref": "#/components/schemas/ChangedCell"
+            },
+            "type": "array",
+            "title": "Changed Cells"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "before",
+          "after",
+          "changed_cells"
+        ],
+        "title": "ScenarioOut",
+        "description": "What-if scenario result."
+      },
+      "SeasonOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "speed_mps": {
+            "type": "number",
+            "title": "Speed Mps"
+          },
+          "max_minutes": {
+            "type": "number",
+            "title": "Max Minutes"
+          },
+          "share_of_days": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Of Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "speed_mps",
+          "max_minutes"
+        ],
+        "title": "SeasonOut",
+        "description": "Season profile."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

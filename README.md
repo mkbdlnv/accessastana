@@ -22,7 +22,7 @@ Other Kazakhstan cities can be added with one YAML file in `config/cities/`.
 | Data sources, licences, versions, limitations | [docs/data-sources.md](docs/data-sources.md) |
 | Phase 0 data spike | [docs/phase0-spike-report.md](docs/phase0-spike-report.md) |
 | First results for Astana | [docs/results-astana.md](docs/results-astana.md) |
-| API contract | [docs/api-contract.md](docs/api-contract.md) (live OpenAPI at `/docs`) |
+| API contract | [docs/api.md](docs/api.md) (OpenAPI: `docs/openapi.json`, live at `/docs`) |
 | AWS deployment | [docs/deployment-aws.md](docs/deployment-aws.md) |
 | Frontend | [frontend/README.md](frontend/README.md) |
 

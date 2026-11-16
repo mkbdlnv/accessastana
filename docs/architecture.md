@@ -136,3 +136,44 @@ so every number in the paper can be traced to exact input versions.
   recomputation. Latency is about 0.1–0.5 s for Astana.
 - `POST /optimize` → MCLP / p-median on populated cells as candidates
   (≈560 × 560, sparse). CBC solves k ≤ 20 in under a second.
+
+## UML and design diagrams
+
+All diagrams are generated from sources in `docs/diagrams/`
+(`./scripts/render_diagrams.sh`, `uv run python scripts/draw_uml_wireframes.py`).
+
+| Diagram | File |
+|---|---|
+| Component diagram (UML) | `docs/diagrams/png/components.png` |
+| Deployment diagram (UML) | `docs/diagrams/png/deployment.png` |
+| Use-case diagram (UML) | `docs/diagrams/png/usecases.png` |
+| Class diagram: Strategy + Template Method in ingestion | `docs/diagrams/png/classes_ingestion.png` |
+| Sequence diagram: `POST /scenarios` | `docs/diagrams/png/sequence_scenario.png` |
+| Data model (ER) | `docs/diagrams/png/er.png` |
+| Data pipeline | `docs/diagrams/png/pipeline.png` |
+| Low-fidelity wireframes | `docs/diagrams/png/wireframe_overview.png`, `wireframe_scenario.png` |
+
+## Architecture style: alternatives considered
+
+| Criterion | Modular monolith (chosen) | Microservices | Event-driven |
+|---|---|---|---|
+| Team of 3–4, one semester | one repo, one deploy, simple debugging | per-service CI/CD, contracts, tracing: high overhead | needs a broker (Kafka/RabbitMQ) and eventual-consistency handling |
+| Workload | heavy batch offline + light read API | could scale the API separately, which is not needed at this load | the data changes rarely (one import per OSM snapshot), so there is nothing to stream |
+| Infrastructure | one EC2 instance (AWS Academy) | several services and possibly a gateway | an extra broker container |
+| Evolution path | modules have one-way dependencies, so `analysis` can become a worker service later | — | an import-finished event could trigger recomputation later |
+
+## Patterns: used, and deliberately not used
+
+Used (with code locations): Strategy, Template Method, Repository, Service Layer,
+Facade, Dependency Injection, Application Factory (table above). Two more:
+- **Simple Factory / registry:** `ingestion/__init__.py:available_loaders` maps a name to a loader class.
+- **Process-wide single instance:** `settings.get_settings()` and `db.session.get_engine()` are
+  cached with `lru_cache`; `api/services.EngineCache` holds one engine per city. This is the
+  Singleton intent without a global mutable class.
+- **Frontend:** component-based React. State lives in React Context + `useReducer`
+  (`frontend/src/state`): a one-way, Flux-like data flow in which components subscribe to the
+  store and re-render on change (observer-like subscription provided by React).
+
+Not used, and why: classic server-side **MVC** (the server renders no views; the SPA plus JSON
+API split takes its place); an explicit **Observer**/event bus in the backend (no asynchronous
+domain events; imports are batch jobs).
