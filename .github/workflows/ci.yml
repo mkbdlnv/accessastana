@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    services:
+      postgis:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: accessastana
+          POSTGRES_PASSWORD: accessastana
+          POSTGRES_DB: accessastana_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U accessastana" --health-interval 5s --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://accessastana:accessastana@localhost:5432/accessastana_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: {enable-cache: true}
+      - run: uv sync --frozen --extra ingest
+      - name: Ruff
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Mypy (core modules)
+        run: uv run mypy
+      - name: Tests + coverage (analysis and api >= 70%)
+        run: >
+          uv run pytest --cov=accessastana.analysis --cov=accessastana.api
+          --cov-report=term-missing --cov-report=xml --cov-fail-under=70
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: coverage, path: coverage.xml}
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: frontend}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json}
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build

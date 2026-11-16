@@ -1,0 +1,82 @@
+# 2026-11-16 14:11 backend quality checks
+$ uv run ruff check .
+All checks passed!
+[exit 0]
+$ uv run ruff format --check .
+61 files already formatted
+[exit 0]
+$ uv run mypy
+Success: no issues found in 14 source files
+[exit 0]
+$ uv run pytest --cov=accessastana.analysis --cov=accessastana.api --cov-report=term-missing
+============================= test session starts ==============================
+platform darwin -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0
+rootdir: <repo>
+configfile: pyproject.toml
+testpaths: tests
+plugins: cov-7.1.0, anyio-4.16.0
+collected 38 items
+
+tests/integration/test_pipeline_api.py ..........                        [ 26%]
+tests/unit/test_climate.py ..                                            [ 31%]
+tests/unit/test_graph_accessibility.py ............                      [ 63%]
+tests/unit/test_ingestion_units.py ......                                [ 78%]
+tests/unit/test_scenarios_location.py ........                           [100%]
+
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.12.16-final-0 _______________
+
+Name                                            Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------
+src/accessastana/analysis/__init__.py               0      0   100%
+src/accessastana/analysis/accessibility.py         66      0   100%
+src/accessastana/analysis/climate.py               38      1    97%   46
+src/accessastana/analysis/engine.py                89      0   100%
+src/accessastana/analysis/graph.py                 59      1    98%   65
+src/accessastana/analysis/location.py              62      3    95%   73, 102-103
+src/accessastana/analysis/scenarios.py             31      0   100%
+src/accessastana/api/__init__.py                    0      0   100%
+src/accessastana/api/deps.py                       22      1    95%   47
+src/accessastana/api/main.py                       51      6    88%   42-47, 87
+src/accessastana/api/repositories/__init__.py      40      0   100%
+src/accessastana/api/routers/__init__.py           57      2    96%   33-34
+src/accessastana/api/schemas.py                    96      0   100%
+src/accessastana/api/services/__init__.py         128      5    96%   49, 103, 125, 224, 256
+-----------------------------------------------------------------------------
+TOTAL                                             739     19    97%
+============================== 38 passed in 4.13s ==============================
+[exit 0]
+$ uv run pytest --cov=accessastana (whole package)
+src/accessastana/__init__.py                        1      0   100%
+src/accessastana/analysis/__init__.py               0      0   100%
+src/accessastana/analysis/accessibility.py         66      0   100%
+src/accessastana/analysis/climate.py               38      1    97%
+src/accessastana/analysis/engine.py                89      0   100%
+src/accessastana/analysis/graph.py                 59      1    98%
+src/accessastana/analysis/location.py              62      3    95%
+src/accessastana/analysis/scenarios.py             31      0   100%
+src/accessastana/api/__init__.py                    0      0   100%
+src/accessastana/api/deps.py                       22      1    95%
+src/accessastana/api/main.py                       51      6    88%
+src/accessastana/api/repositories/__init__.py      40      0   100%
+src/accessastana/api/routers/__init__.py           57      2    96%
+src/accessastana/api/schemas.py                    96      0   100%
+src/accessastana/api/services/__init__.py         128      5    96%
+src/accessastana/cli.py                            51     51     0%
+src/accessastana/config.py                         54      0   100%
+src/accessastana/db/__init__.py                     0      0   100%
+src/accessastana/db/models.py                     110      0   100%
+src/accessastana/db/repositories.py                42      1    98%
+src/accessastana/db/session.py                     21      3    86%
+src/accessastana/ingestion/__init__.py             15      2    87%
+src/accessastana/ingestion/base.py                 88      1    99%
+src/accessastana/ingestion/kontur.py               72      2    97%
+src/accessastana/ingestion/open_meteo.py           54      3    94%
+src/accessastana/jobs.py                           32      0   100%
+src/accessastana/reporting/__init__.py              0      0   100%
+src/accessastana/reporting/build.py                77      1    99%
+src/accessastana/reporting/figures.py              75      0   100%
+src/accessastana/reporting/tables.py               61      0   100%
+src/accessastana/settings.py                       17      0   100%
+TOTAL                                            1509     83    94%
+38 passed in 3.60s

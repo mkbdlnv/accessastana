@@ -1,0 +1,29 @@
+# 2026-11-16 14:12 docker / CI checks
+$ docker compose config --quiet (dev)
+[exit 0]
+$ docker compose -f docker-compose.prod.yml config --quiet (with sample env)
+[exit 0]
+$ docker compose build api frontend
+#35 DONE 0.0s
+
+#36 [api] resolving provenance for metadata file
+#36 DONE 0.0s
+ Image final-api Built 
+ Image final-frontend Built 
+[exit ]
+$ docker compose ps
+api	sha256:585329ccbbb44da573f9dc2fa4fbca5f98d8da5c314cb813ea57ffea22b4cbcc	Up About a minute (healthy)
+db	postgis/postgis:17-3.5	Up 58 minutes (healthy)
+frontend	sha256:50358b48a042385bf2a9b3c8314e794e07256e9276655dcfa132ac2e91b089d0	Up About a minute
+$ docker image ls (sizes)
+final-api:latest	2.15GB
+final-frontend:latest	79.9MB
+postgis/postgis:17-3.5	887MB
+
+$ YAML parse of workflows and dependabot
+.github/dependabot.yml OK updates=4
+.github/workflows/build.yml OK jobs=build
+.github/workflows/ci.yml OK jobs=python,frontend
+$ git status
+fatal: not a git repository (or any of the parent directories): .git
+CI runs on GitHub: NONE (project is not a git repository, no remote)

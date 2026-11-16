@@ -1,0 +1,21 @@
+# City configuration. To add another Kazakhstan city, copy this file, change
+# the OSM relation ids, UTM zone and weather point, then run the ingestion
+# pipeline with `--city <slug>`. No code changes are needed.
+slug: astana
+name: {en: Astana, ru: Астана, kk: Астана}
+osm:
+  pbf: data/raw/osm/kazakhstan-261115.osm.pbf
+  boundary_relation_id: 3087155        # admin_level=4, verified in Phase 0
+  district_admin_level: "6"
+# Metric CRS for distances: UTM zone 42N covers Astana (71.4 E).
+metric_crs: "EPSG:32642"
+h3_resolution: 8
+population:
+  kontur_gpkg: data/raw/kontur/kontur_population_KZ_20231101.gpkg
+  # Calibration control totals (Phase 0 decision A). District rows are used
+  # when present, otherwise the city total. See data/reference/README.md.
+  control_totals_csv: data/reference/population_control.csv
+weather:
+  latitude: 51.17
+  longitude: 71.45
+map_center: [71.43, 51.13]

@@ -1,0 +1,42 @@
+# Development stack: PostGIS + API + frontend.
+# Heavy preprocessing (ingestion/analysis) runs on the host, or in a container:
+#   docker compose --profile ingest run --rm ingest accessastana pipeline --city astana
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    # The official image is amd64-only; on Apple Silicon it runs under Rosetta.
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-accessastana}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-accessastana}
+      POSTGRES_DB: ${POSTGRES_DB:-accessastana}
+    ports: ["${DB_PORT:-5432}:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-accessastana} -d ${POSTGRES_DB:-accessastana}"]
+      interval: 5s
+      retries: 20
+
+  api:
+    build: {context: ., dockerfile: docker/api.Dockerfile}
+    environment:
+      ACCESSASTANA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-accessastana}:${POSTGRES_PASSWORD:-accessastana}@db:5432/${POSTGRES_DB:-accessastana}
+      ACCESSASTANA_CORS_ORIGINS: http://localhost:5173,http://localhost:8080
+    ports: ["8000:8000"]
+    depends_on: {db: {condition: service_healthy}}
+
+  frontend:
+    build: {context: ./frontend, dockerfile: Dockerfile}
+    ports: ["8080:80"]
+    depends_on: [api]
+
+  ingest:
+    profiles: [ingest]
+    build: {context: ., dockerfile: docker/ingest.Dockerfile}
+    environment:
+      ACCESSASTANA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-accessastana}:${POSTGRES_PASSWORD:-accessastana}@db:5432/${POSTGRES_DB:-accessastana}
+    volumes: ["./data:/app/data", "./reports:/app/reports", "./config:/app/config"]
+    depends_on: {db: {condition: service_healthy}}
+
+volumes:
+  pgdata:

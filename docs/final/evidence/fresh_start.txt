@@ -1,0 +1,79 @@
+
+===== 14:11:46 1. cp .env.example .env (README: adjust ports) -> DB_PORT=5434
+DB_PORT=5434
+ACCESSASTANA_DATABASE_URL=postgresql+psycopg://accessastana:change-me@localhost:5434/accessastana
+TEST_DATABASE_URL=postgresql+psycopg://accessastana:change-me@localhost:5434/accessastana_test
+
+===== 14:11:46 2. docker compose up -d db
+$ docker compose up -d --wait db
+ Network accessastana_fresh_default Creating 
+ Network accessastana_fresh_default Created 
+ Volume accessastana_fresh_pgdata Creating 
+ Volume accessastana_fresh_pgdata Created 
+ Container accessastana_fresh-db-1 Creating 
+ Container accessastana_fresh-db-1 Created 
+ Container accessastana_fresh-db-1 Starting 
+ Container accessastana_fresh-db-1 Started 
+ Container accessastana_fresh-db-1 Waiting 
+ Container accessastana_fresh-db-1 Healthy 
+[exit 0]
+
+===== 14:11:52 3. uv sync --extra ingest
+$ uv sync --extra ingest -q
+[exit 0]
+
+===== 14:11:53 4. uv run accessastana db-upgrade
+$ uv run accessastana db-upgrade
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, initial schema
+INFO  [alembic.runtime.migration] Running upgrade 0001 -> 0002, drop poi_matches (OSM-vs-registry completeness removed from scope)
+[exit 0]
+
+===== 14:11:59 5. data: HEAD-check README URLs, hard-link already downloaded files
+HEAD 200 0 https://download.geofabrik.de/asia/kazakhstan-261115.osm.pbf
+HEAD 200 0 https://geodata-eu-central-1-kontur-public.s3.amazonaws.com/kontur_datasets/kontur_population_KZ_20231101.gpkg.gz
+
+===== 14:11:59 6. uv run accessastana pipeline --city astana
+  "school/winter": 0.567,
+  "school/winter_severe": 0.294,
+  "kindergarten/summer": 0.545,
+  "kindergarten/winter": 0.517,
+  "kindergarten/winter_severe": 0.247,
+  "clinic/summer": 0.452,
+  "clinic/winter": 0.416,
+  "clinic/winter_severe": 0.2,
+  "pharmacy/summer": 0.55,
+  "pharmacy/winter": 0.509,
+  "pharmacy/winter_severe": 0.322,
+  "transit_stop/summer": 0.822,
+  "transit_stop/winter": 0.812,
+  "transit_stop/winter_severe": 0.649,
+  "grocery/summer": 0.737,
+  "grocery/winter": 0.705,
+  "grocery/winter_severe": 0.48,
+  "park/summer": 0.486,
+  "park/winter": 0.432,
+  "park/winter_severe": 0.277,
+  "_seconds": 0.9
+ }
+}
+report written to <clean-copy>/reports/astana/report.pdf
+[exit 0]
+pipeline wall time: 363s
+
+===== 14:18:02 7. API: uvicorn on :8001 (8000 is used by the working stack)
+{"status":"ok","db":"ok"}
+{"city":"astana","category":"school","season":"winter","metric":"minutes","max_minutes":15.0,"cells":[{"h3":"8821502da1fffff","value":null,"reachable":false,"po
+pdf 200 594989
+
+===== 14:18:09 8. frontend: npm install && npm run build
+$ npm install --silent
+[exit 0]
+
+✓ built in 488ms
+[exit 0]
+
+===== 14:18:18 9. cleanup fresh compose project
+ Network accessastana_fresh_default Removed 
+DONE

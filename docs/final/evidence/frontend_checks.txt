@@ -1,0 +1,30 @@
+# 2026-11-16 14:12 frontend checks
+$ npm run lint
+> accessastana-frontend@0.1.0 lint
+> tsc --noEmit && eslint .
+
+[exit ]
+$ npm test
+> accessastana-frontend@0.1.0 test
+> vitest run
+ RUN  v5.1.0 <repo>/frontend
+ Test Files  2 passed (2)
+      Tests  14 passed (14)
+   Start at  14:12:18
+   Duration  77ms (import 34%, transform 28%, tests 25%, worker 12%)
+$ npm run build
+dist/assets/index-SqnRhAZU.css                         77.16 kB │ gzip:  11.97 kB
+dist/assets/webgl-DPmRug5_.js                          18.84 kB │ gzip:   6.61 kB
+dist/assets/get-attribute-from-layouts-Dd2gixpo.js     19.20 kB │ gzip:   5.54 kB
+dist/assets/array-utils-flat-BL8Cekj1.js               29.53 kB │ gzip:   9.53 kB
+dist/assets/expression-C4x9yiMU.js                     96.42 kB │ gzip:  29.17 kB
+dist/assets/index-CVMxI36b.js                       2,333.61 kB │ gzip: 655.11 kB
+
+✓ built in 337ms
+$ npm audit --omit=dev
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force

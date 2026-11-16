@@ -1,0 +1,62 @@
+# OSM tag mapping for the facility categories analysed by AccessAstana.
+#
+# An OSM object belongs to a category when ANY rule matches (logical OR).
+# Each rule is {key: [allowed values]}; all keys inside one rule must match
+# (logical AND).
+#
+# Changing this file changes the research results: record the change in
+# docs/data-sources.md and re-run `accessastana ingest osm-pois`.
+#
+# Label translations live in frontend/src/i18n; `label` here is used in reports.
+
+categories:
+  school:
+    label: Schools
+    rules:
+      - {amenity: [school]}
+    dedupe_radius_m: 50          # node + building polygon of the same school
+  kindergarten:
+    label: Kindergartens
+    rules:
+      - {amenity: [kindergarten, childcare]}
+    dedupe_radius_m: 30
+  clinic:
+    label: Clinics (primary care)
+    rules:
+      - {amenity: [clinic, doctors]}
+      - {healthcare: [clinic, centre, doctor]}
+    dedupe_radius_m: 30
+  pharmacy:
+    label: Pharmacies
+    rules:
+      - {amenity: [pharmacy]}
+      - {healthcare: [pharmacy]}
+    dedupe_radius_m: 20
+  transit_stop:
+    label: Public transport stops
+    rules:
+      - {highway: [bus_stop]}
+      - {public_transport: [platform]}
+    # Phase 0: ~21% of stops are double-mapped (bus_stop node + platform).
+    # Clustering within 30 m merges both sides of a pair; opposite-direction
+    # stops across a wide avenue (>30 m) stay separate, which is correct.
+    dedupe_radius_m: 30
+  grocery:
+    label: Grocery stores
+    rules:
+      - {shop: [supermarket, convenience, grocery, greengrocer]}
+    dedupe_radius_m: 20
+  park:
+    label: Parks
+    rules:
+      - {leisure: [park]}
+      - {leisure: [garden]}
+    # Gardens below this area are typically private yards/flower beds
+    # (assumption, team decision 2026-11-16; configurable).
+    min_area_m2: 5000
+    min_area_applies_to: {leisure: [garden]}  # small public squares (leisure=park) are kept
+    # Large parks are reached at their edge, not at their centre: we sample
+    # points along the polygon boundary every N metres and use them all as
+    # destinations ("entrances" proxy). See analysis/accessibility.py.
+    boundary_sample_m: 100
+    dedupe_radius_m: 0
